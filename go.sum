@@ -1,0 +1,4 @@
+github.com/kettek/gobl v0.4.0 h1:M+Ghu+jB+yUxLAEjJaN+IqsUMlVM4OAsShJVlzBvX/0=
+github.com/kettek/gobl v0.4.0/go.mod h1:x08Yfd9JU5Xqv69pggE1ieWICu+sZeMphOmhx1TSud4=
+github.com/radovskyb/watcher v1.0.7 h1:AYePLih6dpmS32vlHfhCeli8127LzkIgwJGcwwe8tUE=
+github.com/radovskyb/watcher v1.0.7/go.mod h1:78okwvY5wPdzcb1UYnip1pvrZNIVEIh/Cm+ZuvsUYIg=
