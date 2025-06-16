@@ -87,7 +87,7 @@ func (m *Mob) RemoveIndividuals(count int) {
 }
 
 func (m *Mob) Draw(screen *ebiten.Image) {
-	radius := len(m.participants) * 2
+	radius := len(m.participants)
 	vector.StrokeCircle(screen, float32(m.x), float32(m.y), float32(radius)/2, 1, color.NRGBA{255, 0, 255, 255}, true)
 
 	for _, p := range m.participants {
@@ -175,15 +175,16 @@ func (m *Mob) Update(g *Game) {
 
 	for _, p := range m.participants {
 		p.Update(m.participants)
+
 		// Also pull them towards our position, greater the further away they are.
 		if ind, ok := p.(*Individual); ok {
 			dx := m.x - ind.x
 			dy := m.y - ind.y
 			dist := math.Sqrt(dx*dx + dy*dy)
-			if dist > 0 {
+			if dist > 20 {
 				// Move towards the mob's position.
-				ind.x += dx / dist * 1.5 // Adjust speed as needed.
-				ind.y += dy / dist * 1.5
+				ind.x += dx / dist * 1.3 // Adjust speed as needed.
+				ind.y += dy / dist * 1.3
 			}
 		}
 	}

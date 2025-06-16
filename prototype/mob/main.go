@@ -84,11 +84,12 @@ func (g *Game) Layout(ow, oh int) (int, int) {
 func main() {
 	g := &Game{}
 	ebiten.SetWindowSize(600, 600)
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("Mobbox")
 
 	g.mobs = append(g.mobs, NewMob(300, 300))
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 500; i++ {
 		g.mobs[0].AddParticipant(&Individual{
 			name: "chump",
 			x:    float64(300 + i%10*20),
