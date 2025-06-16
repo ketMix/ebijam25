@@ -30,6 +30,15 @@ func (e *EventResourceDepleted) Type() string {
 	return "deplete"
 }
 
+type EventResourceSpawn struct {
+	x, y float64
+	food int
+}
+
+func (e *EventResourceSpawn) Type() string {
+	return "food-spawn"
+}
+
 type Bus struct {
 	events   []Event
 	handlers map[string][]func(Event)

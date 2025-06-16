@@ -11,6 +11,7 @@ import (
 )
 
 type Game struct {
+	director   Director
 	mobs       []*Mob
 	structures []*Structure
 	resources  []*Resource
@@ -20,6 +21,7 @@ var gLayout rebui.Layout
 
 func (g *Game) Update() error {
 	gLayout.Update()
+
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
 		g.mobs[0].targetX = float64(x)
@@ -46,6 +48,8 @@ func (g *Game) Update() error {
 			})
 		}
 	}
+
+	g.director.Update(g)
 
 	for _, mob := range g.mobs {
 		mob.Update(g)
@@ -113,6 +117,13 @@ func main() {
 		b.participants = append(b.participants, a.participants...)
 		fmt.Println(b.id, "now has", len(b.participants), "participants after merging with", a.id)
 		g.RemoveMob(a)
+	})
+
+	eventBus.Subscribe((&EventResourceSpawn{}).Type(), func(event Event) {
+		e := event.(*EventResourceSpawn)
+		res := NewResource(e.x, e.y, e.food)
+		g.resources = append(g.resources, res)
+		fmt.Println("Spawned resource:", res.id, "at", res.x, res.y, "with food:", res.food)
 	})
 
 	eventBus.Subscribe((&EventProduce{}).Type(), func(event Event) {
