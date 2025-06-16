@@ -38,11 +38,11 @@ func main() {
 
 	// Mob
 	Task("mob-build").
-		Exec("go", "build", "./sandbox/mob")
+		Exec("go", "build", "./prototype/mob")
 	Task("mob-run").
 		Exec(append([]interface{}{}, "./mob"+exe)...)
 	Task("mob-watch").
-		Watch("internal/**", "pkg/**", "sandbox/mob/**").
+		Watch("internal/**", "pkg/**", "prototype/mob/**").
 		Signaler(SigQuit).
 		Run("mob-build").
 		Run("mob-run")
