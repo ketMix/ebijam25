@@ -7,6 +7,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/kettek/rebui"
+	"github.com/kettek/rebui/widgets"
 )
 
 type Mob struct {
@@ -15,6 +17,7 @@ type Mob struct {
 	x, y             float64
 	targetX, targetY float64
 	targetId         int
+	debugNode        *rebui.Node
 }
 
 var mobIdCounter = 0
@@ -25,6 +28,16 @@ func nextMobId() int {
 }
 
 func NewMob(x, y float64) *Mob {
+	node := gLayout.AddNode(rebui.Node{
+		Type:            "Text",
+		Width:           "128",
+		Height:          "32",
+		X:               "20",
+		Y:               "20",
+		Text:            "Mob",
+		ForegroundColor: "white",
+	})
+	node.Widget.(*widgets.Text).AssignBorderColor(nil)
 	return &Mob{
 		id:           nextMobId(),
 		x:            x,
@@ -32,6 +45,7 @@ func NewMob(x, y float64) *Mob {
 		targetX:      x,
 		targetY:      y,
 		participants: make([]Participant, 0),
+		debugNode:    node,
 	}
 }
 
@@ -82,6 +96,9 @@ func (m *Mob) Draw(screen *ebiten.Image) {
 }
 
 func (m *Mob) Update(g *Game) {
+	m.debugNode.Widget.(*widgets.Text).AssignText(fmt.Sprintf("%d: %d participants", m.id, len(m.participants)))
+	m.debugNode.Widget.(*widgets.Text).AssignX(m.x)
+	m.debugNode.Widget.(*widgets.Text).AssignY(m.y)
 	if m.targetId != 0 {
 		var targetMob *Mob
 		for _, mob := range g.mobs {

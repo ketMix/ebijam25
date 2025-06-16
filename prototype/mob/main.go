@@ -5,6 +5,9 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/kettek/rebui"
+	_ "github.com/kettek/rebui/defaults/font"
+	_ "github.com/kettek/rebui/widgets"
 )
 
 type Game struct {
@@ -13,7 +16,10 @@ type Game struct {
 	resources  []*Resource
 }
 
+var gLayout rebui.Layout
+
 func (g *Game) Update() error {
+	gLayout.Update()
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
 		g.mobs[0].targetX = float64(x)
@@ -64,6 +70,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, mob := range g.mobs {
 		mob.Draw(screen)
 	}
+	gLayout.Draw(screen)
 }
 
 func (g *Game) Layout(ow, oh int) (int, int) {
@@ -174,6 +181,7 @@ func (g *Game) FindMobById(id int) *Mob {
 func (g *Game) RemoveMob(mob *Mob) {
 	for i, m := range g.mobs {
 		if m == mob {
+			gLayout.RemoveNode(m.debugNode)
 			g.mobs = append(g.mobs[:i], g.mobs[i+1:]...)
 			return
 		}
@@ -193,6 +201,7 @@ func (g *Game) FindResourceById(id int) *Resource {
 func (g *Game) RemoveResource(res *Resource) {
 	for i, r := range g.resources {
 		if r == res {
+			gLayout.RemoveNode(r.debugNode)
 			g.resources = append(g.resources[:i], g.resources[i+1:]...)
 			return
 		}

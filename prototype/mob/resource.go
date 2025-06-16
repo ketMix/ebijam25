@@ -1,16 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/kettek/rebui"
+	"github.com/kettek/rebui/widgets"
 )
 
 type Resource struct {
-	id   int
-	x, y float64
-	food int
+	id        int
+	x, y      float64
+	food      int
+	debugNode *rebui.Node
 }
 
 var resourceIdCounter = 0
@@ -21,11 +25,22 @@ func nextResourceId() int {
 }
 
 func NewResource(x, y float64, food int) *Resource {
+	node := gLayout.AddNode(rebui.Node{
+		Type:            "Text",
+		Width:           "128",
+		Height:          "32",
+		X:               fmt.Sprintf("%f", x-float64(food)),
+		Y:               fmt.Sprintf("%f", y-float64(food)),
+		Text:            fmt.Sprintf("%d", food),
+		ForegroundColor: "white",
+	})
+	node.Widget.(*widgets.Text).AssignBorderColor(nil)
 	return &Resource{
-		id:   nextResourceId(),
-		x:    x,
-		y:    y,
-		food: food,
+		id:        nextResourceId(),
+		x:         x,
+		y:         y,
+		food:      food,
+		debugNode: node,
 	}
 }
 
@@ -42,4 +57,5 @@ func (r *Resource) Deplete(amount int) {
 			id: r.id,
 		})
 	}
+	r.debugNode.Widget.(*widgets.Text).AssignText(fmt.Sprintf("%d", r.food))
 }
