@@ -35,5 +35,17 @@ func main() {
 			wasmSrc = filepath.Join(goRoot, "misc/wasm/wasm_exec.js")
 		}).
 		Exec("cp", &wasmSrc, "web/")
+
+	// Mob
+	Task("mob-build").
+		Exec("go", "build", "./sandbox/mob")
+	Task("mob-run").
+		Exec(append([]interface{}{}, "./mob"+exe)...)
+	Task("mob-watch").
+		Watch("internal/**", "pkg/**", "sandbox/mob/**").
+		Signaler(SigQuit).
+		Run("mob-build").
+		Run("mob-run")
+
 	Go()
 }
