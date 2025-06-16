@@ -82,6 +82,10 @@ func (g *Game) Layout(ow, oh int) (int, int) {
 }
 
 func main() {
+	if err := loadImages(); err != nil {
+		panic(err)
+	}
+
 	g := &Game{}
 	ebiten.SetWindowSize(600, 600)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
@@ -89,12 +93,12 @@ func main() {
 
 	g.mobs = append(g.mobs, NewMob(300, 300))
 
-	for i := 0; i < 500; i++ {
-		g.mobs[0].AddParticipant(&Individual{
-			name: "chump",
-			x:    float64(300 + i%10*20),
-			y:    float64(300 + i/10*10),
-		})
+	for i := 0; i < 2000; i++ {
+		g.mobs[0].AddParticipant(NewIndividual(
+			"chump",
+			float64(300+i%10*20),
+			float64(300+i/10*10),
+		))
 	}
 
 	g.resources = append(g.resources, NewResource(100, 100, 20))
@@ -171,10 +175,6 @@ func main() {
 		fmt.Println("Resource depleted:", res.id, "at", res.x, res.y)
 		g.RemoveResource(res)
 	})
-
-	if err := loadImages(); err != nil {
-		panic(err)
-	}
 
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)

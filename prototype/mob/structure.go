@@ -33,11 +33,11 @@ func (s *Structure) Update(participants []Participant) {
 		s.timer = 0
 		eventBus.Publish(&EventProduce{
 			structure: s,
-			individual: &Individual{
-				name: "chump",
-				x:    s.x,
-				y:    s.y,
-			},
+			individual: NewIndividual(
+				"chump",
+				s.x,
+				s.y,
+			),
 		})
 	}
 }

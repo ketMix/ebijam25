@@ -5,16 +5,25 @@ import (
 )
 
 type Individual struct {
-	name string
-	x, y float64
+	image *ebiten.Image
+	name  string
+	x, y  float64
+}
+
+func NewIndividual(name string, x, y float64) *Individual {
+	return &Individual{
+		name:  name,
+		x:     x,
+		y:     y,
+		image: images["chump"],
+	}
 }
 
 func (i *Individual) Draw(screen *ebiten.Image) {
 	opts := &ebiten.DrawImageOptions{}
 	opts.GeoM.Translate(i.x, i.y)
-	img := images["chump"]
-	opts.GeoM.Translate(-float64(img.Bounds().Dx())/2, -float64(img.Bounds().Dy())/2)
-	screen.DrawImage(img, opts)
+	opts.GeoM.Translate(-float64(i.image.Bounds().Dx())/2, -float64(i.image.Bounds().Dy())/2)
+	screen.DrawImage(i.image, opts)
 }
 
 func (i *Individual) Update(participants []Participant) {
