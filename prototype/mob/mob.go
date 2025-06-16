@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 
@@ -8,49 +9,139 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-type Individual struct {
-	name string
-	x, y float64 // x, y in range of -1 to 1, indicating distance from center of mob.
-}
-
 type Mob struct {
-	individuals      []*Individual
-	structures       []*Structure // mobile structures.
+	id               int
+	participants     []Participant // an individual or structure or whatever.
 	x, y             float64
 	targetX, targetY float64
+	targetId         int
 }
 
-func (m *Mob) AddIndividual(ind *Individual) {
-	m.individuals = append(m.individuals, ind)
+var mobIdCounter = 0
+
+func nextMobId() int {
+	mobIdCounter++
+	return mobIdCounter
 }
 
-func (m *Mob) AddStructure(s *Structure) {
-	m.structures = append(m.structures, s)
+func NewMob(x, y float64) *Mob {
+	return &Mob{
+		id:           nextMobId(),
+		x:            x,
+		y:            y,
+		targetX:      x,
+		targetY:      y,
+		participants: make([]Participant, 0),
+	}
+}
+
+func (m *Mob) Radius() float64 {
+	return float64(len(m.participants)) * 2
+}
+
+func (m *Mob) Individuals() []*Individual {
+	var individuals []*Individual
+	for _, p := range m.participants {
+		if ind, ok := p.(*Individual); ok {
+			individuals = append(individuals, ind)
+		}
+	}
+	return individuals
+}
+
+func (m *Mob) Structures() []*Structure {
+	var structures []*Structure
+	for _, p := range m.participants {
+		if str, ok := p.(*Structure); ok {
+			structures = append(structures, str)
+		}
+	}
+	return structures
+}
+
+func (m *Mob) AddParticipant(p Participant) {
+	m.participants = append(m.participants, p)
+}
+
+func (m *Mob) RemoveIndividuals(count int) {
+	for i := len(m.participants) - 1; i >= 0 && count > 0; i-- {
+		if _, ok := m.participants[i].(*Individual); ok {
+			m.participants = append(m.participants[:i], m.participants[i+1:]...)
+			count--
+		}
+	}
 }
 
 func (m *Mob) Draw(screen *ebiten.Image) {
-	radius := len(m.individuals) * 2
+	radius := len(m.participants) * 2
 	vector.StrokeCircle(screen, float32(m.x), float32(m.y), float32(radius)/2, 1, color.NRGBA{255, 0, 255, 255}, true)
 
-	// Draw structures.
-	for _, s := range m.structures {
-		opts := &ebiten.DrawImageOptions{}
-		opts.GeoM.Translate(s.x, s.y)
-		img := images["mobile-village"]
-		opts.GeoM.Translate(-float64(img.Bounds().Dx())/2, -float64(img.Bounds().Dy())/2)
-		screen.DrawImage(img, opts)
-	}
-
-	for _, ind := range m.individuals {
-		opts := &ebiten.DrawImageOptions{}
-		opts.GeoM.Translate(ind.x, ind.y)
-		img := images["chump"]
-		opts.GeoM.Translate(-float64(img.Bounds().Dx())/2, -float64(img.Bounds().Dy())/2)
-		screen.DrawImage(img, opts)
+	for _, p := range m.participants {
+		p.Draw(screen)
 	}
 }
 
-func (m *Mob) Update() {
+func (m *Mob) Update(g *Game) {
+	if m.targetId != 0 {
+		var targetMob *Mob
+		for _, mob := range g.mobs {
+			if mob.id == m.targetId {
+				targetMob = mob
+				break
+			}
+		}
+		if targetMob != nil {
+			m.targetX = targetMob.x
+			m.targetY = targetMob.y
+		} else {
+			// If the target mob is not found, reset the target.
+			m.targetId = 0
+			m.targetX = m.x
+			m.targetY = m.y
+		}
+	}
+
+	// See if we can merge mobs.
+	pullX := 0.0
+	pullY := 0.0
+	for _, mob := range g.mobs {
+		if mob.id == m.id {
+			continue
+		}
+		if len(m.participants) >= len(mob.participants) {
+			// Circle check.
+			dx := m.x - mob.x
+			dy := m.y - mob.y
+			dist := math.Sqrt(dx*dx + dy*dy)
+			if dist < 4 || dist < (m.Radius()+mob.Radius())/3 {
+				eventBus.Publish(&EventMerge{
+					from: mob.id,
+					to:   m.id,
+				})
+				// Just stop processing for now.
+				return
+			}
+		}
+		// Pull towards the other mob.
+		if len(m.participants) <= len(mob.participants) {
+			dx := mob.x - m.x
+			dy := mob.y - m.y
+			dist := math.Sqrt(dx*dx + dy*dy)
+			fmt.Println(mob.Radius()*2, m.Radius(), dist)
+			sizeDiff := math.Min((mob.Radius()*2 - m.Radius()), 3)
+			if dist < 500 { // Adjust this threshold as needed.
+				// Pull towards the other mob.
+				pullX += dx / dist * sizeDiff // Adjust speed as needed.
+				pullY += dy / dist * sizeDiff
+			}
+		}
+	}
+	if pullX != 0 || pullY != 0 {
+		// Move towards the other mob.
+		m.x += pullX
+		m.y += pullY
+	}
+
 	// Move towards targetX and targetY.
 	if m.x != m.targetX || m.y != m.targetY {
 		angleToTarget := math.Atan2(m.targetY-m.y, m.targetX-m.x)
@@ -65,59 +156,18 @@ func (m *Mob) Update() {
 		}
 	}
 
-	// Spread out individuals but pull them towards the mob's x and y.
-	radius := float64(len(m.individuals) * 2)
-	for _, ind := range m.individuals {
-		// Move towards mob center, faster based on distance.
-		dx := m.x - ind.x
-		dy := m.y - ind.y
-		dist := (dx*dx + dy*dy)
-		if dist > radius/2 {
-			// Move towards the mob center.
-			ind.x += dx * 0.01
-			ind.y += dy * 0.01
-		}
-		// Space from other individuals.
-		for _, other := range m.individuals {
-			if other != ind {
-				dx := other.x - ind.x
-				dy := other.y - ind.y
-				dist := (dx*dx + dy*dy)
-				if dist < 4 {
-					// Move away from the other individual.
-					ind.x -= dx * 4
-					ind.y -= dy * 4
-				}
+	for _, p := range m.participants {
+		p.Update(m.participants)
+		// Also pull them towards our position, greater the further away they are.
+		if ind, ok := p.(*Individual); ok {
+			dx := m.x - ind.x
+			dy := m.y - ind.y
+			dist := math.Sqrt(dx*dx + dy*dy)
+			if dist > 0 {
+				// Move towards the mob's position.
+				ind.x += dx / dist * 1.5 // Adjust speed as needed.
+				ind.y += dy / dist * 1.5
 			}
 		}
-	}
-
-	// Spread out structures but pull them towards the mob's x and y.
-	for _, s := range m.structures {
-		// Move towards mob center, faster based on distance.
-		dx := m.x - s.x
-		dy := m.y - s.y
-		dist := (dx*dx + dy*dy)
-		if dist > 16 {
-			// Move towards the mob center.
-			s.x += dx * 0.01
-			s.y += dy * 0.01
-		}
-	}
-	// Spread out structures from each other.
-	for i, s := range m.structures {
-		for j, other := range m.structures {
-			if i != j {
-				dx := other.x - s.x
-				dy := other.y - s.y
-				dist := (dx*dx + dy*dy)
-				if dist < 16 {
-					// Move away from the other structure.
-					s.x -= dx * 0.1
-					s.y -= dy * 0.1
-				}
-			}
-		}
-		s.Update()
 	}
 }

@@ -13,6 +13,23 @@ func (e *EventProduce) Type() string {
 	return "produce"
 }
 
+type EventMerge struct {
+	from int
+	to   int
+}
+
+func (e *EventMerge) Type() string {
+	return "merge"
+}
+
+type EventResourceDepleted struct {
+	id int
+}
+
+func (e *EventResourceDepleted) Type() string {
+	return "deplete"
+}
+
 type Bus struct {
 	events   []Event
 	handlers map[string][]func(Event)
