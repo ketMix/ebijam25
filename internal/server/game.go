@@ -20,7 +20,7 @@ type Game struct {
 
 // Setup sets up event subscriptions.
 func (g *Game) Setup() {
-	g.EventBus = *event.NewBus()
+	g.EventBus = *event.NewBus("server")
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
 		if mob := g.Mobs.FindByID(evt.ID); mob != nil {

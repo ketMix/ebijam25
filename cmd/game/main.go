@@ -8,7 +8,7 @@ import (
 
 func main() {
 	// It's a great game we've developed here...!!!
-	g := &game.Game{}
+	g := game.NewGame(true)
 
 	tm := &transitions.Manager{}
 	g.Managers.Add(tm)
