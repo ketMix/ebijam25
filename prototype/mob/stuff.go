@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"embed"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -25,12 +25,12 @@ func loadImages() error {
 	}
 	for _, file := range files {
 		if !file.IsDir() {
-			ext := filepath.Ext(file.Name())
+			ext := path.Ext(file.Name())
 			if ext != ".png" {
 				continue
 			}
 
-			data, err := stuff.ReadFile(filepath.Join("stuff", file.Name()))
+			data, err := stuff.ReadFile(path.Join("stuff", file.Name()))
 			if err != nil {
 				return err
 			}
