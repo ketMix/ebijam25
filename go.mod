@@ -6,6 +6,7 @@ require (
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
 	github.com/kettek/gobl v0.4.0
 	github.com/kettek/rebui v0.0.0-20250616061855-06857af123e2
+	github.com/sytallax/prettylog v0.1.0
 	golang.org/x/image v0.20.0
 )
 
