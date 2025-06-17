@@ -1,5 +1,7 @@
 package event
 
+import "github.com/ketMix/ebijam25/internal/message"
+
 // SchlubCreate represents an event where a new schlub is created with a unique ID and type.
 type SchlubCreate struct {
 	ID   int    `json:"id"`   // ID of the schlub
@@ -35,7 +37,7 @@ func (s SchlubPlace) Type() string {
 }
 
 func init() {
-	Register(SchlubCreate{})
-	Register(SchlubCreateMany{})
-	Register(SchlubPlace{})
+	message.Register(SchlubCreate{})
+	message.Register(SchlubCreateMany{})
+	message.Register(SchlubPlace{})
 }

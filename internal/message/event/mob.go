@@ -1,5 +1,7 @@
 package event
 
+import "github.com/ketMix/ebijam25/internal/message"
+
 // MobMerge represents an event where one mob is merged into another.
 type MobMerge struct {
 	From int `json:"from"` // ID of the mob being merged
@@ -50,8 +52,8 @@ func (m MobSpawn) Type() string {
 }
 
 func init() {
-	Register(MobMerge{})
-	Register(MobSplit{})
-	Register(MobMove{})
-	Register(MobSpawn{})
+	message.Register(MobMerge{})
+	message.Register(MobSplit{})
+	message.Register(MobMove{})
+	message.Register(MobSpawn{})
 }

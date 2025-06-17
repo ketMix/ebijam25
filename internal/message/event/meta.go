@@ -1,5 +1,7 @@
 package event
 
+import "github.com/ketMix/ebijam25/internal/message"
+
 // MetaJoin represents an event where a player joins the game with a username and unique ID.
 type MetaJoin struct {
 	Username string `json:"username"`
@@ -22,6 +24,6 @@ func (m MetaLeave) Type() string {
 }
 
 func init() {
-	Register(MetaJoin{})
-	Register(MetaLeave{})
+	message.Register(MetaJoin{})
+	message.Register(MetaLeave{})
 }

@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/ketMix/ebijam25/internal/event"
+	"github.com/ketMix/ebijam25/internal/message"
 )
 
 // Leave represents a request to leave the game.
@@ -14,5 +14,5 @@ func (l Leave) Type() string {
 }
 
 func init() {
-	event.Register(Leave{})
+	message.Register(Leave{})
 }

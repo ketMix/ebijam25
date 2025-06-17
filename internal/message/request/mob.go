@@ -1,6 +1,6 @@
 package request
 
-import "github.com/ketMix/ebijam25/internal/event"
+import "github.com/ketMix/ebijam25/internal/message"
 
 // Split represents a request to split a mob into a separate mob.
 type Split struct {
@@ -46,8 +46,8 @@ func (c Construct) Type() string {
 }
 
 func init() {
-	event.Register(Split{})
-	event.Register(Move{})
-	event.Register(Formation{})
-	event.Register(Construct{})
+	message.Register(Split{})
+	message.Register(Move{})
+	message.Register(Formation{})
+	message.Register(Construct{})
 }

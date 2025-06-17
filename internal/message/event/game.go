@@ -1,5 +1,9 @@
 package event
 
+import (
+	"github.com/ketMix/ebijam25/internal/message"
+)
+
 // GameWin represents an event where a player wins the game.
 type GameWin struct {
 	ID int `json:"id"` // Player ID who won the game
@@ -22,6 +26,6 @@ func (g GameOver) Type() string {
 }
 
 func init() {
-	Register(GameWin{})
-	Register(GameOver{})
+	message.Register(GameWin{})
+	message.Register(GameOver{})
 }
