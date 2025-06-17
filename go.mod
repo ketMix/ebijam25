@@ -5,7 +5,11 @@ go 1.24.0
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
 	github.com/kettek/gobl v0.4.0
+<<<<<<< Updated upstream
 	github.com/kettek/rebui v0.0.0-20250616061855-06857af123e2
+=======
+	golang.org/x/image v0.20.0
+>>>>>>> Stashed changes
 )
 
 require (
