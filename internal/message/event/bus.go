@@ -37,5 +37,3 @@ func NewBus() *Bus {
 		handlers: make(map[string][]func(Event)),
 	}
 }
-
-var eventBus = NewBus()

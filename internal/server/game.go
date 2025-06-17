@@ -13,18 +13,17 @@ type Player struct {
 
 // Game represents a game instance. It is responsible for processgg the world.
 type Game struct {
-	eventBus *event.Bus
-	players  []*Player
-	mobs     world.Mobs
+	world.State
+	players []*Player
 	//Resources []*Resource
 }
 
 // Setup sets up event subscriptions.
 func (g *Game) Setup() {
-	g.eventBus = event.NewBus()
-	g.eventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
+	g.EventBus = *event.NewBus()
+	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
-		if mob := g.mobs.FindByID(evt.ID); mob != nil {
+		if mob := g.Mobs.FindByID(evt.ID); mob != nil {
 			mob.X = float64(evt.X)
 			mob.Y = float64(evt.Y)
 			// TODO: Periodically send mob position updates to players
@@ -38,7 +37,7 @@ func (g *Game) Update() {
 		// Update player logic
 	}*/
 
-	for _, mob := range g.mobs {
+	for _, mob := range g.Mobs {
 		g.UpdateMob(mob)
 	}
 

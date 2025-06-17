@@ -6,5 +6,5 @@ import (
 
 // UpdateMob updates the state of a mob in the game.
 func (g *Game) UpdateMob(mob *world.Mob) {
-	mob.Update()
+	mob.Update(&g.State)
 }
