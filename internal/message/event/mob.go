@@ -37,6 +37,18 @@ func (m MobMove) Type() string {
 	return "mob-move"
 }
 
+// MobPosition represents the position of a mob on the map.
+type MobPosition struct {
+	ID int `json:"id"` // ID of the mob
+	X  int `json:"x"`
+	Y  int `json:"y"`
+}
+
+// Type returns the type of the MobPosition event.
+func (m MobPosition) Type() string {
+	return "mob-position"
+}
+
 // MobSpawn represents an event where a new mob is spawned at a specific location. It is required that schlubs are created prior to this event.
 type MobSpawn struct {
 	ID int `json:"id"` // ID of the spawned mob
@@ -55,5 +67,6 @@ func init() {
 	message.Register(MobMerge{})
 	message.Register(MobSplit{})
 	message.Register(MobMove{})
+	message.Register(MobPosition{})
 	message.Register(MobSpawn{})
 }
