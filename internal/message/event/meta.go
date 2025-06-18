@@ -17,6 +17,7 @@ func (m MetaJoin) Type() string {
 type MetaWelcome struct {
 	Username string `json:"username"`
 	ID       int    `json:"id"`
+	MobID    int    `json:"mobId"` // ID of the mob associated with the player
 }
 
 // Type returns the type of the MetaWelcome event.

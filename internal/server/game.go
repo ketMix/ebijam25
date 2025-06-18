@@ -53,7 +53,7 @@ func (g *Game) Setup() {
 			Player: *player,
 		})
 		g.log.Debug("player joined", "username", evt.Username, "id", player.ID)
-		g.EventBus.Publish(event.MetaJoin{
+		g.EventBus.Publish(&event.MetaJoin{
 			Username: evt.Username,
 			ID:       player.ID,
 		})
@@ -61,6 +61,13 @@ func (g *Game) Setup() {
 		mob := world.NewMob(player.ID, g.mobID.Next(), 100, 100)
 		g.players[len(g.players)-1].MobID = mob.ID
 		g.Mobs.Add(mob)
+
+		// Let the player know who they are.
+		g.EventBus.Publish(&event.MetaWelcome{
+			Username: evt.Username,
+			ID:       player.ID,
+			MobID:    mob.ID,
+		})
 		// TODO: Send all players to new player.
 		// TODO: Send new player to all other players.
 	})

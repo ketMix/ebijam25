@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -23,6 +24,19 @@ func (g *Game) Setup() {
 	g.EventBus = *event.NewBus("client")
 
 	// **** Event -> local state change hooks.
+	g.EventBus.Subscribe((event.MetaJoin{}).Type(), func(e event.Event) {
+		evt := e.(*event.MetaJoin)
+		fmt.Println("Player joined:", evt.Username, "ID:", evt.ID)
+	})
+	g.EventBus.Subscribe((event.MetaLeave{}).Type(), func(e event.Event) {
+		evt := e.(*event.MetaLeave)
+		fmt.Println("Player left:", evt.ID)
+	})
+	g.EventBus.Subscribe((event.MetaWelcome{}).Type(), func(e event.Event) {
+		evt := e.(*event.MetaWelcome)
+		g.PlayerID = evt.ID
+		g.MobID = evt.MobID
+	})
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobSpawn)
 		mob := world.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))

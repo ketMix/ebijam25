@@ -13,7 +13,9 @@ func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob) {
 	radius := mob.Radius()
 	vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), 1, color.NRGBA{255, 0, 255, 255}, true)
 
-	// Draw vision circle
-	vision := mob.Vision()
-	vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 1, color.NRGBA{0, 255, 0, 64}, false)
+	// Draw vision circle for local player.
+	if mob.ID == g.MobID {
+		vision := mob.Vision()
+		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 1, color.NRGBA{0, 255, 0, 64}, false)
+	}
 }
