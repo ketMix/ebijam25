@@ -25,9 +25,18 @@ func (g *Game) Setup() {
 	// **** Event -> local state change hooks.
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobSpawn)
-		mob := world.NewMob(evt.ID, evt.Owner, float64(evt.X), float64(evt.Y))
+		mob := world.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
 		g.Mobs.Add(mob)
 		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y)
+	})
+	g.EventBus.Subscribe((event.MobDespawn{}).Type(), func(e event.Event) {
+		evt := e.(*event.MobDespawn)
+		if mob := g.Mobs.FindByID(evt.ID); mob != nil {
+			g.Mobs.Remove(mob)
+			g.log.Debug("mob despawned", "id", evt.ID)
+		} else {
+			g.log.Warn("mob despawned but not found", "id", evt.ID)
+		}
 	})
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
