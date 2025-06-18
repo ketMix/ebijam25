@@ -13,15 +13,25 @@ func (s SchlubCreate) Type() string {
 	return "schlub-create"
 }
 
-// SchlubCreateMany represents an event where multiple schlubs of the same type are created at once. It is presumed that ID is from ID to ID+Count-1.
+// SchlubCreateMany represents an event where multiple schlubs of the same type are created at once.
 type SchlubCreateMany struct {
-	SchlubCreate
-	Count int `json:"count"` // Number of schlubs of this type
+	Kind string `json:"kind"` // Type of schlub (e.g., "warrior", "monk")
+	IDs  []int  `json:"ids"`  // IDs of the schlubs being created
 }
 
 // Type returns the type of the SchlubCreateMany event.
 func (s SchlubCreateMany) Type() string {
 	return "schlub-createMany"
+}
+
+// SchlubCreateList represents an event where multiple schlubs are created at once.
+type SchlubCreateList struct {
+	Schlubs []SchlubCreate `json:"schlubs"` // List of schlubs being created
+}
+
+// Type returns the type of the SchlubCreateList event.
+func (s SchlubCreateList) Type() string {
+	return "schlub-createList"
 }
 
 // SchlubPlace represents an event where a schlub is placed at a specific location on the map.
@@ -39,5 +49,6 @@ func (s SchlubPlace) Type() string {
 func init() {
 	message.Register(SchlubCreate{})
 	message.Register(SchlubCreateMany{})
+	message.Register(SchlubCreateList{})
 	message.Register(SchlubPlace{})
 }

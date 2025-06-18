@@ -6,6 +6,7 @@ import (
 
 // State represents the current state of the game world.
 type State struct {
+	Tickrate int // The current tick rate of the world.
 	EventBus event.Bus
 	Mobs     Mobs // Collection of mobs in the world
 }

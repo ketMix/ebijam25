@@ -13,6 +13,17 @@ func (m MetaJoin) Type() string {
 	return "meta-join"
 }
 
+// MetaWelcome represents a welcome event for a player joining the game. It is the counterpart to MetaJoin.
+type MetaWelcome struct {
+	Username string `json:"username"`
+	ID       int    `json:"id"`
+}
+
+// Type returns the type of the MetaWelcome event.
+func (m MetaWelcome) Type() string {
+	return "meta-welcome"
+}
+
 // MetaLeave represents an event where a player leaves the game.
 type MetaLeave struct {
 	ID int `json:"id"`
@@ -25,5 +36,6 @@ func (m MetaLeave) Type() string {
 
 func init() {
 	message.Register(MetaJoin{})
+	message.Register(MetaWelcome{})
 	message.Register(MetaLeave{})
 }

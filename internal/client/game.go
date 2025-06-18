@@ -1,7 +1,10 @@
 package client
 
 import (
+	"log/slog"
+
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/ketMix/ebijam25/internal/log"
 	"github.com/ketMix/ebijam25/internal/message/event"
 	"github.com/ketMix/ebijam25/internal/message/request"
 	"github.com/ketMix/ebijam25/internal/server"
@@ -10,6 +13,7 @@ import (
 
 // Game represents the client-side game state and logic.
 type Game struct {
+	log        *slog.Logger
 	localGame  bool
 	serverGame *server.Game
 	world.State
@@ -17,6 +21,7 @@ type Game struct {
 
 // Setup sets up our event and request hooks.
 func (g *Game) Setup(localGame bool) {
+	g.log = log.New("game", "client")
 	g.EventBus = *event.NewBus("client")
 
 	g.localGame = localGame
@@ -24,7 +29,8 @@ func (g *Game) Setup(localGame bool) {
 	if g.localGame {
 		g.serverGame = &server.Game{}
 		g.serverGame.Setup()
-		g.serverGame.EventBus.Pipe(&g.EventBus, []string{"mob-", "schlub-"})
+		g.serverGame.EventBus.Pipe(&g.EventBus, []string{"mob-", "schlub-", "meta-"})
+		g.EventBus.Pipe(&g.serverGame.EventBus, []string{"request-"})
 	}
 
 	// **** Event -> local state change hooks.
@@ -32,12 +38,14 @@ func (g *Game) Setup(localGame bool) {
 		evt := e.(*event.MobSpawn)
 		mob := world.NewMob(evt.ID, evt.Owner, float64(evt.X), float64(evt.Y))
 		g.Mobs.Add(mob)
+		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y)
 	})
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
 		if mob := g.Mobs.FindByID(evt.ID); mob != nil {
 			mob.X = float64(evt.X)
 			mob.Y = float64(evt.Y)
+			g.log.Debug("mob position updated", "id", evt.ID, "x", evt.X, "y", evt.Y)
 		}
 	})
 	g.EventBus.Subscribe((event.MobMove{}).Type(), func(e event.Event) {
@@ -46,6 +54,7 @@ func (g *Game) Setup(localGame bool) {
 			mob.TargetX = float64(evt.X)
 			mob.TargetY = float64(evt.Y)
 			mob.TargetID = evt.TargetID
+			g.log.Debug("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
 		}
 	})
 
@@ -54,15 +63,26 @@ func (g *Game) Setup(localGame bool) {
 		// TODO: Send move request to server.
 		// NOTE: We could do local interpolation here as well, so as to make the game feel more responsive in the event of lag.
 		g.serverGame.EventBus.Publish(e)
+		g.log.Debug("move request sent", "event", e)
 	})
 	g.EventBus.Subscribe((request.Leave{}).Type(), func(e event.Event) {
 		// TODO: Send leave request to server.
 		g.serverGame.EventBus.Publish(e)
+		g.log.Debug("leave request sent", "event", e)
 	})
 	g.EventBus.Subscribe((request.Construct{}).Type(), func(e event.Event) {
 		// TODO: Send construct request to server.
 		g.serverGame.EventBus.Publish(e)
+		g.log.Debug("construct request sent", "event", e)
 	})
+
+	// Send a join request if we're in a local game.
+	if g.localGame {
+		g.EventBus.Publish(&request.Join{
+			Username: "Player1",
+		})
+		g.log.Debug("join request sent")
+	}
 }
 
 // Update updates the game state and processes events.
@@ -76,9 +96,9 @@ func (g *Game) Update() error {
 	// Update the thingz.
 	g.EventBus.ProcessEvents()
 
-	for _, mob := range g.Mobs {
+	/*for _, mob := range g.Mobs {
 		mob.Update(&g.State)
-	}
+	}*/
 	return nil
 }
 

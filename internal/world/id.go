@@ -1,8 +1,11 @@
 package world
 
+// ID represents a unique identifier.
+type ID = int
+
 // IDGenerator is a simple ID generator that provides unique IDs.
 type IDGenerator struct {
-	currentID int
+	currentID ID
 }
 
 // NewIDGenerator creates a new ID generator.
@@ -11,7 +14,7 @@ func NewIDGenerator() *IDGenerator {
 }
 
 // Next generates the next unique ID.
-func (gen *IDGenerator) Next() int {
+func (gen *IDGenerator) Next() ID {
 	gen.currentID++
 	return gen.currentID
 }

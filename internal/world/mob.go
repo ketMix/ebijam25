@@ -14,8 +14,23 @@ type Constituent interface {
 // Mobs is a slice of mobbies, yo.
 type Mobs []*Mob
 
+// FindVisible returns a slice of mobs that are visible to the mob with the given ID.
+func (m *Mobs) FindVisible(mobID ID) Mobs {
+	sourceMob := m.FindByID(mobID)
+	if sourceMob == nil {
+		return nil // Mob not found, return empty slice
+	}
+	var visibleMobs Mobs
+	for _, mob := range *m {
+		if sourceMob.Intersects(mob) {
+			visibleMobs = append(visibleMobs, mob)
+		}
+	}
+	return visibleMobs
+}
+
 // FindByID searches for a mob by its ID in the Mobs slice.
-func (m *Mobs) FindByID(id int) *Mob {
+func (m *Mobs) FindByID(id ID) *Mob {
 	for _, mob := range *m {
 		if mob.ID == id {
 			return mob
@@ -44,25 +59,27 @@ func (m *Mobs) Remove(mob *Mob) {
 
 // Mob represents a friggin' mob.
 type Mob struct {
-	OwnerID          int // ID of the owner(player)
-	ID               int
+	OwnerID          ID // ID of the owner(player)
+	ID               ID
 	X, Y             float64 // Position of the mob in the world
 	TargetX, TargetY float64 // Target position to move to
-	TargetID         int
-	constituents     []Constituent
+	TargetID         ID
+	Constituents     []Constituent
 }
 
 // NewMob creates a new Mob instance.
-func NewMob(owner int, id int, x, y float64) *Mob {
+func NewMob(owner ID, id ID, x, y float64) *Mob {
 	return &Mob{
-		ID: id,
-		X:  x,
-		Y:  y,
+		OwnerID: owner,
+		ID:      id,
+		X:       x,
+		Y:       y,
 	}
 }
 
 // Update does Mob logic, woo
 func (m *Mob) Update(state *State) {
+	speed := 1.0 * float64(state.Tickrate)
 	// Acquire our target mob if we have one set.
 	if m.TargetID != 0 {
 		if mob := state.Mobs.FindByID(m.TargetID); mob != nil {
@@ -78,12 +95,46 @@ func (m *Mob) Update(state *State) {
 		angleToTarget := math.Atan2(m.TargetY-m.Y, m.TargetX-m.X)
 		dx := math.Cos(angleToTarget)
 		dy := math.Sin(angleToTarget)
-		x := m.X + dx
-		y := m.Y + dy
-		if math.Abs(x-m.TargetX) < 1 && math.Abs(y-m.TargetY) < 1 {
+		x := m.X + dx*speed
+		y := m.Y + dy*speed
+
+		if math.Abs(x-m.TargetX) < speed {
 			x = m.TargetX
+		}
+		if math.Abs(y-m.TargetY) < speed {
 			y = m.TargetY
 		}
+
 		state.EventBus.Publish(&event.MobPosition{ID: m.ID, X: int(x), Y: int(y)})
 	}
+}
+
+// Radius calculates the radius of the mob based on the number of constituents.
+func (m *Mob) Radius() float64 {
+	if len(m.Constituents) == 0 {
+		return 0
+	}
+	return float64(len(m.Constituents)) * 2
+}
+
+// Vision returns the mob's vision radius.
+func (m *Mob) Vision() float64 {
+	// The vision radius is 8x the mob's radius.
+	return m.Radius() * 8
+}
+
+// Intersects checks if the mob's circle edge intersects with another mob's circle edge.
+func (m *Mob) Intersects(other *Mob) bool {
+	return CircleIntersectsCircle(m.X, m.Y, m.Radius(), other.X, other.Y, other.Radius())
+}
+
+// ConstituentsToIDs converts the mob's constituents to their IDs.
+func (m *Mob) ConstituentsToIDs() []ID {
+	ids := make([]ID, len(m.Constituents))
+	for i, c := range m.Constituents {
+		if schlub, ok := c.(*Schlub); ok {
+			ids[i] = schlub.ID
+		} // TODO: Handle others or add an ID getter.
+	}
+	return ids
 }

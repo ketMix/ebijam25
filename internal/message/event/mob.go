@@ -57,12 +57,22 @@ type MobSpawn struct {
 	X     int `json:"x"`
 	Y     int `json:"y"`
 	// FIXME: This will not be cloned properly in Decode.
-	Schlubs []int `json:"schlubs"` // IDs of schlubs associated with the mob
+	Constituents []int `json:"c"` // IDs of schlubs associated with the mob
 }
 
 // Type returns the type of the MobSpawn event.
 func (m MobSpawn) Type() string {
 	return "mob-spawn"
+}
+
+// MobDespawn represents an event where a mob is despawned.
+type MobDespawn struct {
+	ID int `json:"id"` // ID of the mob being despawned
+}
+
+// Type returns the type of the MobDespawn event.
+func (m MobDespawn) Type() string {
+	return "mob-despawn"
 }
 
 func init() {
@@ -71,4 +81,5 @@ func init() {
 	message.Register(MobMove{})
 	message.Register(MobPosition{})
 	message.Register(MobSpawn{})
+	message.Register(MobDespawn{})
 }

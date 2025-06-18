@@ -40,13 +40,14 @@ func (b *Bus) ProcessEvents() {
 				b.log.Debug("handle", "event", event.Type())
 				handler(event)
 			}
-			// Also pipe the event to other buses
-			for key, buses := range b.eventToPipe {
-				if strings.HasPrefix(event.Type(), key) {
-					for _, otherBus := range buses {
-						b.log.Debug("pipe", "event", event.Type(), "to", otherBus.debugName)
-						otherBus.Publish(event)
-					}
+		}
+
+		// Also pipe the event to other buses
+		for key, buses := range b.eventToPipe {
+			if strings.HasPrefix(event.Type(), key) {
+				for _, otherBus := range buses {
+					b.log.Debug("pipe", "event", event.Type(), "to", otherBus.debugName)
+					otherBus.Publish(event)
 				}
 			}
 		}
