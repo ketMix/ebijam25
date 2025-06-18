@@ -49,19 +49,13 @@ func (g *Game) Setup() {
 
 	// **** Request -> network send hooks.
 	g.EventBus.Subscribe((request.Move{}).Type(), func(e event.Event) {
-		// TODO: Send move request to server.
 		// NOTE: We could do local interpolation here as well, so as to make the game feel more responsive in the event of lag.
-		g.EventBus.Publish(e)
 		g.log.Debug("move request sent", "event", e)
 	})
 	g.EventBus.Subscribe((request.Leave{}).Type(), func(e event.Event) {
-		// TODO: Send leave request to server.
-		g.EventBus.Publish(e)
 		g.log.Debug("leave request sent", "event", e)
 	})
 	g.EventBus.Subscribe((request.Construct{}).Type(), func(e event.Event) {
-		// TODO: Send construct request to server.
-		g.EventBus.Publish(e)
 		g.log.Debug("construct request sent", "event", e)
 	})
 }
