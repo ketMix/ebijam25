@@ -16,13 +16,19 @@ type Bus struct {
 	log         *slog.Logger
 	debugName   string
 	events      []Event
+	nextEvents  []Event
+	processing  bool
 	handlers    map[string][]func(Event)
 	eventToPipe map[string][]*Bus
 }
 
 func (b *Bus) Publish(event Event) {
 	b.log.Debug("publish", "event", event.Type())
-	b.events = append(b.events, event)
+	if !b.processing {
+		b.events = append(b.events, event)
+	} else {
+		b.nextEvents = append(b.nextEvents, event)
+	}
 }
 
 func (b *Bus) Subscribe(eventType string, handler func(Event)) {
@@ -34,6 +40,7 @@ func (b *Bus) Subscribe(eventType string, handler func(Event)) {
 }
 
 func (b *Bus) ProcessEvents() {
+	b.processing = true
 	for _, event := range b.events {
 		if handlers, ok := b.handlers[event.Type()]; ok {
 			for _, handler := range handlers {
@@ -52,7 +59,9 @@ func (b *Bus) ProcessEvents() {
 			}
 		}
 	}
-	b.events = nil // Clear events after processing
+	b.processing = false
+	b.events = b.nextEvents
+	b.nextEvents = nil
 }
 
 func (b *Bus) Pipe(other *Bus, events []string) {
