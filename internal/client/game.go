@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/ketMix/ebijam25/internal/log"
 	"github.com/ketMix/ebijam25/internal/message/event"
 	"github.com/ketMix/ebijam25/internal/message/request"
@@ -92,6 +93,16 @@ func (g *Game) Update() error {
 	}
 
 	// Here is where we'd convert inputs, etc., into requests.
+	// Just for testing.
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		// For now, just send a move request to the server.
+		x, y := ebiten.CursorPosition()
+		g.EventBus.Publish(&request.Move{
+			X: x,
+			Y: y,
+		})
+		g.log.Debug("move request sent", "x", x, "y", y)
+	}
 
 	// Update the thingz.
 	g.EventBus.ProcessEvents()

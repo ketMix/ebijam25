@@ -31,7 +31,7 @@ type Game struct {
 // Setup sets up event subscriptions.
 func (g *Game) Setup() {
 	g.log = log.New("game", "server")
-	g.State.Tickrate = 10
+	g.State.Tickrate = 5
 	g.EventBus = *event.NewBus("server")
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
@@ -40,7 +40,7 @@ func (g *Game) Setup() {
 			mob.Y = float64(evt.Y)
 			// TODO: Periodically send mob position updates to players
 			// For now just send it, I guess.
-			g.SendVisibleMobEvent(mob, e)
+			//g.SendVisibleMobEvent(mob, e)
 		}
 	})
 
@@ -63,6 +63,26 @@ func (g *Game) Setup() {
 		g.Mobs.Add(mob)
 		// TODO: Send all players to new player.
 		// TODO: Send new player to all other players.
+	})
+	g.EventBus.Subscribe((request.Move{}).Type(), func(e event.Event) {
+		evt := e.(*request.Move)
+		if len(g.players) == 0 {
+			g.log.Warn("move request received but no players exist")
+			return
+		}
+		player := g.players[0] // For now, just use the first player.
+		if mob := g.Mobs.FindByID(player.MobID); mob != nil {
+			mob.TargetX = float64(evt.X)
+			mob.TargetY = float64(evt.Y)
+			g.SendVisibleMobEvent(mob, &event.MobMove{
+				ID:       mob.ID,
+				X:        int(mob.TargetX),
+				Y:        int(mob.TargetY),
+				TargetID: mob.TargetID,
+			})
+		} else {
+			g.log.Warn("move request received but mob not found", "mobID", player.MobID)
+		}
 	})
 }
 
