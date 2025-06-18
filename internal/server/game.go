@@ -84,6 +84,10 @@ func (g *Game) Setup() {
 			g.log.Warn("move request received but mob not found", "mobID", player.MobID)
 		}
 	})
+
+	// Create a fake mob a distance away to test mob visibility.
+	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 300, 300))
+	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 200, 200))
 }
 
 // Update updates da world.
@@ -127,10 +131,10 @@ func (g *Game) RefreshVisibleMobs(player *Player) {
 		// Check for mobs that are no longer visible
 		for i := len(player.VisibleMobIDs) - 1; i >= 0; i-- {
 			if !slices.Contains(visibleMobs, g.Mobs.FindByID(player.VisibleMobIDs[i])) {
-				player.VisibleMobIDs = append(player.VisibleMobIDs[:i], player.VisibleMobIDs[i+1:]...)
 				g.HideMobFrom(player, g.Mobs.FindByID(player.VisibleMobIDs[i]))
 				// Notify the player about the mob that is no longer visible
 				g.log.Debug("mob no longer visible", "player", player.MobID, "mob", player.VisibleMobIDs[i])
+				player.VisibleMobIDs = append(player.VisibleMobIDs[:i], player.VisibleMobIDs[i+1:]...)
 			}
 		}
 	}
