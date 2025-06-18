@@ -8,31 +8,19 @@ import (
 	"github.com/ketMix/ebijam25/internal/log"
 	"github.com/ketMix/ebijam25/internal/message/event"
 	"github.com/ketMix/ebijam25/internal/message/request"
-	"github.com/ketMix/ebijam25/internal/server"
 	"github.com/ketMix/ebijam25/internal/world"
 )
 
 // Game represents the client-side game state and logic.
 type Game struct {
-	log        *slog.Logger
-	localGame  bool
-	serverGame *server.Game
+	log *slog.Logger
 	world.State
 }
 
 // Setup sets up our event and request hooks.
-func (g *Game) Setup(localGame bool) {
+func (g *Game) Setup() {
 	g.log = log.New("game", "client")
 	g.EventBus = *event.NewBus("client")
-
-	g.localGame = localGame
-
-	if g.localGame {
-		g.serverGame = &server.Game{}
-		g.serverGame.Setup()
-		g.serverGame.EventBus.Pipe(&g.EventBus, []string{"mob-", "schlub-", "meta-"})
-		g.EventBus.Pipe(&g.serverGame.EventBus, []string{"request-"})
-	}
 
 	// **** Event -> local state change hooks.
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
@@ -63,35 +51,23 @@ func (g *Game) Setup(localGame bool) {
 	g.EventBus.Subscribe((request.Move{}).Type(), func(e event.Event) {
 		// TODO: Send move request to server.
 		// NOTE: We could do local interpolation here as well, so as to make the game feel more responsive in the event of lag.
-		g.serverGame.EventBus.Publish(e)
+		g.EventBus.Publish(e)
 		g.log.Debug("move request sent", "event", e)
 	})
 	g.EventBus.Subscribe((request.Leave{}).Type(), func(e event.Event) {
 		// TODO: Send leave request to server.
-		g.serverGame.EventBus.Publish(e)
+		g.EventBus.Publish(e)
 		g.log.Debug("leave request sent", "event", e)
 	})
 	g.EventBus.Subscribe((request.Construct{}).Type(), func(e event.Event) {
 		// TODO: Send construct request to server.
-		g.serverGame.EventBus.Publish(e)
+		g.EventBus.Publish(e)
 		g.log.Debug("construct request sent", "event", e)
 	})
-
-	// Send a join request if we're in a local game.
-	if g.localGame {
-		g.EventBus.Publish(&request.Join{
-			Username: "Player1",
-		})
-		g.log.Debug("join request sent")
-	}
 }
 
 // Update updates the game state and processes events.
 func (g *Game) Update() error {
-	if g.localGame {
-		g.serverGame.Update()
-	}
-
 	// Here is where we'd convert inputs, etc., into requests.
 	// Just for testing.
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
