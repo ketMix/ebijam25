@@ -22,7 +22,7 @@ func (m *Mobs) FindVisible(mobID ID) Mobs {
 	}
 	var visibleMobs Mobs
 	for _, mob := range *m {
-		if sourceMob.Intersects(mob) {
+		if CircleIntersectsCircle(sourceMob.X, sourceMob.Y, sourceMob.Vision(), mob.X, mob.Y, mob.Radius()) {
 			visibleMobs = append(visibleMobs, mob)
 		}
 	}
@@ -74,6 +74,8 @@ func NewMob(owner ID, id ID, x, y float64) *Mob {
 		ID:      id,
 		X:       x,
 		Y:       y,
+		TargetX: x,
+		TargetY: y,
 	}
 }
 
@@ -112,15 +114,15 @@ func (m *Mob) Update(state *State) {
 // Radius calculates the radius of the mob based on the number of constituents.
 func (m *Mob) Radius() float64 {
 	if len(m.Constituents) == 0 {
-		return 0
+		return 1
 	}
 	return float64(len(m.Constituents)) * 2
 }
 
 // Vision returns the mob's vision radius.
 func (m *Mob) Vision() float64 {
-	// The vision radius is 8x the mob's radius.
-	return m.Radius() * 8
+	vision := math.Max(200, math.Log(m.Radius())*50)
+	return vision
 }
 
 // Intersects checks if the mob's circle edge intersects with another mob's circle edge.

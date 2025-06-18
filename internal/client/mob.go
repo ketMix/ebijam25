@@ -13,4 +13,8 @@ func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob) {
 	//radius := mob.Radius()
 	radius := 10.0
 	vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), 1, color.NRGBA{255, 0, 255, 255}, true)
+
+	// Draw vision circle
+	vision := mob.Vision()
+	vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 1, color.NRGBA{0, 255, 0, 64}, false)
 }
