@@ -10,6 +10,8 @@ import (
 )
 
 type Joiner struct {
+	cancel   context.CancelFunc
+	canceled chan bool
 }
 
 func (j *Joiner) Join(host string) {
@@ -20,7 +22,6 @@ func (j *Joiner) Join(host string) {
 	if err != nil {
 		panic(err)
 	}
-	defer c.CloseNow()
 
 	data, err := message.Encode(&request.Join{
 		Username: "Throbbing John",
@@ -35,5 +36,35 @@ func (j *Joiner) Join(host string) {
 		panic(err)
 	}
 
-	c.Close(websocket.StatusNormalClosure, "bai bai")
+	go func() {
+		for {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+			j.cancel = cancel
+
+			kind, data, err := c.Read(ctx)
+			if err != nil {
+				panic(err)
+			}
+			if kind != websocket.MessageText {
+				continue
+			}
+
+			msg, err := message.Decode(data)
+			if err != nil {
+				println("error decoding message:", err.Error())
+				break
+			} else {
+				println("decoded message:", msg.Type())
+			}
+		}
+
+		c.Close(websocket.StatusNormalClosure, "bai bai")
+		j.canceled <- true
+	}()
+}
+
+func (j *Joiner) Stoppe() {
+	if j.cancel != nil {
+		j.cancel()
+	}
 }
