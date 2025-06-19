@@ -22,9 +22,11 @@ func NewGame(localGame bool) *Game {
 	}
 
 	g.client.Setup()
+	g.client.EventBus.NoQueue = true
 
 	if localGame {
 		g.server.Setup()
+		g.server.EventBus.NoQueue = true
 		g.server.EventBus.Pipe(&g.client.EventBus, []string{"mob-", "schlub-", "meta-"})
 		g.client.EventBus.Pipe(&g.server.EventBus, []string{"request-"})
 

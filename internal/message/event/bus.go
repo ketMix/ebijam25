@@ -20,10 +20,16 @@ type Bus struct {
 	processing  bool
 	handlers    map[string][]func(Event)
 	eventToPipe map[string][]*Bus
+	NoQueue     bool // If true, events are processed immediately without queuing
 }
 
 func (b *Bus) Publish(event Event) {
 	b.log.Debug("publish", "event", event.Type())
+	if b.NoQueue {
+		b.ProcessEvent(event)
+		return
+	}
+
 	if !b.processing {
 		b.events = append(b.events, event)
 	} else {
@@ -39,25 +45,33 @@ func (b *Bus) Subscribe(eventType string, handler func(Event)) {
 	b.handlers[eventType] = append(b.handlers[eventType], handler)
 }
 
+func (b *Bus) ProcessEvent(event Event) {
+	if handlers, ok := b.handlers[event.Type()]; ok {
+		for _, handler := range handlers {
+			b.log.Debug("handle", "event", event.Type())
+			handler(event)
+		}
+	}
+
+	// Also pipe the event to other buses
+	for key, buses := range b.eventToPipe {
+		if strings.HasPrefix(event.Type(), key) {
+			for _, otherBus := range buses {
+				b.log.Debug("pipe", "event", event.Type(), "to", otherBus.debugName)
+				otherBus.Publish(event)
+			}
+		}
+	}
+
+}
+
 func (b *Bus) ProcessEvents() {
+	if b.NoQueue {
+		return
+	}
 	b.processing = true
 	for _, event := range b.events {
-		if handlers, ok := b.handlers[event.Type()]; ok {
-			for _, handler := range handlers {
-				b.log.Debug("handle", "event", event.Type())
-				handler(event)
-			}
-		}
-
-		// Also pipe the event to other buses
-		for key, buses := range b.eventToPipe {
-			if strings.HasPrefix(event.Type(), key) {
-				for _, otherBus := range buses {
-					b.log.Debug("pipe", "event", event.Type(), "to", otherBus.debugName)
-					otherBus.Publish(event)
-				}
-			}
-		}
+		b.ProcessEvent(event)
 	}
 	b.processing = false
 	b.events = b.nextEvents
