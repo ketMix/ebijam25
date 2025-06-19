@@ -95,6 +95,9 @@ func (g *Game) Setup() {
 	// Create a fake mob a distance away to test mob visibility.
 	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 300, 300))
 	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 200, 200))
+	g.Mobs[len(g.Mobs)-1].Constituents = []world.Constituent{
+		&world.Schlub{ID: 1, X: 300, Y: 300},
+	}
 }
 
 // Update updates da world.
@@ -109,6 +112,31 @@ func (g *Game) Update() {
 
 	for _, player := range g.players {
 		g.RefreshVisibleMobs(player)
+		// Send any unknown constituents to the player in delayed chunks.
+		player.NextDelayedSend--
+		if player.NextDelayedSend <= 0 {
+			player.NextDelayedSend = g.tickrate + 1 // TODO: Make this an actual thought out value.
+			if len(player.UnknownConstituents) > 0 {
+				maxSend := 50
+				if len(player.UnknownConstituents) < maxSend {
+					maxSend = len(player.UnknownConstituents)
+				}
+				toSend := player.UnknownConstituents[:maxSend]
+
+				var schlubCreate []event.SchlubCreate
+				for _, constituentID := range toSend {
+					schlubCreate = append(schlubCreate, event.SchlubCreate{
+						ID: constituentID,
+						// TODO: Other props.
+					})
+				}
+				g.EventBus.Publish(&event.SchlubCreateList{
+					Schlubs: schlubCreate,
+				})
+				player.UnknownConstituents = player.UnknownConstituents[maxSend:]
+				player.KnownConstituents = append(player.KnownConstituents, toSend...)
+			}
+		}
 	}
 
 	for _, mob := range g.Mobs {
@@ -153,17 +181,21 @@ func (g *Game) SendMobTo(mob *world.Mob, player *Player) {
 		return
 	}
 
-	// First collect and send any unknown constituents to the player.
-	/*constituents := mob.ConstituentsToIDs()
-	g.SendConstituentsTo(player, constituents)*/
+	constituents := mob.ConstituentsToIDs()
+	// These will be sent to the player over time.
+	for _, constituent := range constituents {
+		if !slices.Contains(player.KnownConstituents, constituent) {
+			player.UnknownConstituents = append(player.UnknownConstituents, constituent)
+		}
+	}
 
 	// Send the mob spawn event to the player.
 	evt := &event.MobSpawn{
-		ID:    mob.ID,
-		Owner: mob.OwnerID,
-		X:     int(mob.X),
-		Y:     int(mob.Y),
-		//Constituents: constituents,
+		ID:           mob.ID,
+		Owner:        mob.OwnerID,
+		X:            int(mob.X),
+		Y:            int(mob.Y),
+		Constituents: constituents, // Might as well send the constituent IDs as well. Probably not a big issue.
 	}
 
 	g.EventBus.Publish(evt)

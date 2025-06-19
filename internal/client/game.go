@@ -69,6 +69,11 @@ func (g *Game) Setup() {
 			g.log.Debug("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
 		}
 	})
+	// Schlubbin'
+	g.EventBus.Subscribe((event.SchlubCreateList{}).Type(), func(e event.Event) {
+		evt := e.(*event.SchlubCreateList)
+		fmt.Println("Schlubs created:", evt.Schlubs)
+	})
 
 	// **** Request -> network send hooks.
 	g.EventBus.Subscribe((request.Move{}).Type(), func(e event.Event) {
