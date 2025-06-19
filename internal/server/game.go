@@ -18,6 +18,7 @@ type Player struct {
 
 // Game represents a game instance. It is responsible for processgg the world.
 type Game struct {
+	Listener
 	world.State
 	tickrate   int // Tickrate is the number of updates per second.
 	log        *slog.Logger
@@ -96,12 +97,12 @@ func (g *Game) Setup() {
 	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 300, 300))
 	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 200, 200))
 	// For testing, let's add 100 schlubs.
-	for range 100 {
+	/*for range 100 {
 		schlub := &world.Schlub{
 			ID: g.mobID.Next(),
 		}
 		g.Mobs[len(g.Mobs)-1].Constituents = append(g.Mobs[len(g.Mobs)-1].Constituents, schlub)
-	}
+	}*/
 }
 
 // Update updates da world.

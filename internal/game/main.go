@@ -30,6 +30,10 @@ func NewGame(localGame bool) *Game {
 		g.server.EventBus.Pipe(&g.client.EventBus, []string{"mob-", "schlub-", "meta-"})
 		g.client.EventBus.Pipe(&g.server.EventBus, []string{"request-"})
 
+		// fer now
+		g.server.Listen(8080)
+		g.client.Join("localhost:8080")
+
 		g.client.EventBus.Publish(&request.Join{
 			Username: "Player1",
 		})

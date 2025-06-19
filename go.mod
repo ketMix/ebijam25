@@ -3,6 +3,7 @@ module github.com/ketMix/ebijam25
 go 1.24.0
 
 require (
+	github.com/coder/websocket v1.8.13
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
 	github.com/kettek/gobl v0.4.0
 	github.com/kettek/rebui v0.0.0-20250616061855-06857af123e2

@@ -15,8 +15,9 @@ import (
 
 // Game represents the client-side game state and logic.
 type Game struct {
-	log *slog.Logger
+	Joiner
 	world.State
+	log *slog.Logger
 	// NOTE: This will be removed if we switch to storing all schlub data in the ID.
 	pendingConstituents pendingConstituentsList
 	Constituents        []world.Constituent // oof.
