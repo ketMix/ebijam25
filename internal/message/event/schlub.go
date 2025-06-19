@@ -47,8 +47,8 @@ func (s SchlubPlace) Type() string {
 }
 
 func init() {
-	message.Register(SchlubCreate{})
-	message.Register(SchlubCreateMany{})
-	message.Register(SchlubCreateList{})
-	message.Register(SchlubPlace{})
+	message.Register(&SchlubCreate{})
+	message.Register(&SchlubCreateMany{})
+	message.Register(&SchlubCreateList{})
+	message.Register(&SchlubPlace{})
 }

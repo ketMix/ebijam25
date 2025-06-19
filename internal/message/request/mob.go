@@ -46,8 +46,8 @@ func (c Construct) Type() string {
 }
 
 func init() {
-	message.Register(Split{})
-	message.Register(Move{})
-	message.Register(Formation{})
-	message.Register(Construct{})
+	message.Register(&Split{})
+	message.Register(&Move{})
+	message.Register(&Formation{})
+	message.Register(&Construct{})
 }

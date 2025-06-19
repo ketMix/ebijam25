@@ -26,6 +26,6 @@ func (g GameOver) Type() string {
 }
 
 func init() {
-	message.Register(GameWin{})
-	message.Register(GameOver{})
+	message.Register(&GameWin{})
+	message.Register(&GameOver{})
 }

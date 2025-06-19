@@ -36,7 +36,7 @@ func (m MetaLeave) Type() string {
 }
 
 func init() {
-	message.Register(MetaJoin{})
-	message.Register(MetaWelcome{})
-	message.Register(MetaLeave{})
+	message.Register(&MetaJoin{})
+	message.Register(&MetaWelcome{})
+	message.Register(&MetaLeave{})
 }

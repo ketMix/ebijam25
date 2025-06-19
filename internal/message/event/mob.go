@@ -76,10 +76,10 @@ func (m MobDespawn) Type() string {
 }
 
 func init() {
-	message.Register(MobMerge{})
-	message.Register(MobSplit{})
-	message.Register(MobMove{})
-	message.Register(MobPosition{})
-	message.Register(MobSpawn{})
-	message.Register(MobDespawn{})
+	message.Register(&MobMerge{})
+	message.Register(&MobSplit{})
+	message.Register(&MobMove{})
+	message.Register(&MobPosition{})
+	message.Register(&MobSpawn{})
+	message.Register(&MobDespawn{})
 }

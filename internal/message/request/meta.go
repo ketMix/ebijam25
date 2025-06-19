@@ -24,6 +24,6 @@ func (l Leave) Type() string {
 }
 
 func init() {
-	message.Register(Join{})
-	message.Register(Leave{})
+	message.Register(&Join{})
+	message.Register(&Leave{})
 }
