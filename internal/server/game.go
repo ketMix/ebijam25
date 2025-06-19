@@ -95,8 +95,12 @@ func (g *Game) Setup() {
 	// Create a fake mob a distance away to test mob visibility.
 	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 300, 300))
 	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 200, 200))
-	g.Mobs[len(g.Mobs)-1].Constituents = []world.Constituent{
-		&world.Schlub{ID: 1, X: 300, Y: 300},
+	// For testing, let's add 100 schlubs.
+	for range 100 {
+		schlub := &world.Schlub{
+			ID: g.mobID.Next(),
+		}
+		g.Mobs[len(g.Mobs)-1].Constituents = append(g.Mobs[len(g.Mobs)-1].Constituents, schlub)
 	}
 }
 

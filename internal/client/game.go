@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -16,6 +17,9 @@ import (
 type Game struct {
 	log *slog.Logger
 	world.State
+	// NOTE: This will be removed if we switch to storing all schlub data in the ID.
+	pendingConstituents pendingConstituentsList
+	Constituents        []world.Constituent // oof.
 }
 
 // Setup sets up our event and request hooks.
@@ -41,6 +45,20 @@ func (g *Game) Setup() {
 		evt := e.(*event.MobSpawn)
 		mob := world.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
 		g.Mobs.Add(mob)
+		// NOTE: This will be removed if we switch to storing all schlub data in the ID.
+		// Check if we need constituents.
+		for _, constituent := range evt.Constituents {
+			if index := slices.IndexFunc(g.Constituents, func(c world.Constituent) bool {
+				// for now...
+				return c.(*world.Schlub).ID == constituent
+			}); index == -1 {
+				g.pendingConstituents.Add(evt.ID, constituent)
+			} else {
+				// Hey, we have it alreadie.
+				mob.Constituents = append(mob.Constituents, g.Constituents[index])
+			}
+		}
+
 		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y)
 	})
 	g.EventBus.Subscribe((event.MobDespawn{}).Type(), func(e event.Event) {
@@ -69,10 +87,30 @@ func (g *Game) Setup() {
 			g.log.Debug("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
 		}
 	})
-	// Schlubbin'
+	// Schlubbin' NOTE: This will be removed if we switch to storing all schlub data in the ID.
 	g.EventBus.Subscribe((event.SchlubCreateList{}).Type(), func(e event.Event) {
 		evt := e.(*event.SchlubCreateList)
-		fmt.Println("Schlubs created:", evt.Schlubs)
+		for _, schlub := range evt.Schlubs {
+			index := slices.IndexFunc(g.pendingConstituents, func(pc pendingMobConstituent) bool {
+				return pc.Constituent == schlub.ID
+			})
+			if index != -1 {
+				pending := g.pendingConstituents[index]
+				// Remove pending.
+				g.pendingConstituents = append(g.pendingConstituents[:index], g.pendingConstituents[index+1:]...)
+				// Create new schlubbo.
+				newSchlub := &world.Schlub{
+					ID: schlub.ID,
+				}
+				if mob := g.Mobs.FindByID(pending.MobID); mob != nil {
+					mob.Constituents = append(mob.Constituents, newSchlub)
+					g.Constituents = append(g.Constituents, newSchlub)
+					g.log.Debug("schlub created", "mobID", pending.MobID, "schlubID", schlub.ID)
+				} else {
+					g.log.Warn("schlub create event received but mob not found", "mobID", pending.MobID)
+				}
+			}
+		}
 	})
 
 	// **** Request -> network send hooks.
