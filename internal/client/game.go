@@ -17,12 +17,11 @@ import (
 type Game struct {
 	Joiner
 	world.State
-	log              *slog.Logger
-	debug            Debug
-	continentImage   *ebiten.Image
-	cameraX, cameraY float64
-	cameraLock       bool
-	Debug            bool
+	log            *slog.Logger
+	debug          Debug
+	continentImage *ebiten.Image
+	cammie         Cammie
+	Debug          bool
 	// NOTE: This will be removed if we switch to storing all schlub data in the ID.
 	pendingConstituents pendingConstituentsList
 	Constituents        []world.Constituent // oof.
@@ -32,6 +31,7 @@ type Game struct {
 func (g *Game) Setup() {
 	g.log = log.New("game", "client")
 	g.debug.Setup()
+	g.cammie.Setup()
 	g.EventBus = *event.NewBus("client")
 
 	// **** Event -> local state change hooks.
@@ -158,8 +158,8 @@ func (g *Game) Update() error {
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		g.cameraLock = !g.cameraLock
-		g.log.Info("camera lock toggled", "enabled: ", g.cameraLock)
+		g.cammie.ToggleLocked()
+		g.log.Info("camera lock toggled", "enabled: ", g.cammie.Locked())
 	}
 
 	// Move camera with WASD
@@ -184,11 +184,18 @@ func (g *Game) Update() error {
 
 	if x != 0 || y != 0 {
 		// Move the camera based on the pressed keys.
-		g.cameraX += float64(x) * mult
-		g.cameraY += float64(y) * mult
+		g.cammie.AddPosition(x*mult, y*mult)
 	}
 	// Update the thingz.
 	g.EventBus.ProcessEvents()
+
+	// Update the camera to reflect any positional changes.
+	g.cammie.Update()
+
+	// Update our debug info.
+	if g.Debug {
+		g.UpdateDebug()
+	}
 
 	/*for _, mob := range g.Mobs {
 		mob.Update(&g.State)
@@ -196,13 +203,9 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) DrawDebug(screen *ebiten.Image) {
-	if !g.Debug {
-		return
-	}
-
+func (g *Game) UpdateDebug() {
 	systemString := "System Info:\n" +
-		fmt.Sprintf(" Screen Size: %dx%d\n", screen.Bounds().Dx(), screen.Bounds().Dy()) +
+		//fmt.Sprintf(" Screen Size: %dx%d\n", screen.Bounds().Dx(), screen.Bounds().Dy()) + // This doesn't seem necessary and due to me moving this to an update and not draw context, we don't have a screen here. Could re-add, ofc.
 		fmt.Sprintf(" FPS: %.2f | TPS: %.2f\n", ebiten.ActualFPS(), ebiten.ActualTPS()) +
 		fmt.Sprintf(" Tickrate: %d\n", g.State.Tickrate) +
 		"\n"
@@ -238,25 +241,27 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		return
 	}
 
+	// Draw ze continentie.
 	g.continentImage.Clear()
 	g.DrawContinent(g.continentImage)
 
-	ops := &ebiten.DrawImageOptions{}
-	// Center image on player
-	if g.cameraLock {
+	// Center camera on player
+	if g.cammie.Locked() {
 		mob := g.Continent.Mobs.FindByID(g.MobID)
 		if mob != nil {
-			g.cameraX = mob.X
-			g.cameraY = mob.Y
+			g.cammie.SetPosition(mob.X, mob.Y)
 		}
 	}
-	ops.GeoM.Translate(-g.cameraX+float64(screen.Bounds().Dx()/2),
-		-g.cameraY+float64(screen.Bounds().Dy()/2))
 
-	// Draw the image buffer to the screen.
-	screen.DrawImage(g.continentImage, ops)
+	// Draw the continent to the camera.
+	g.cammie.image.Clear()
+	g.cammie.image.DrawImage(g.continentImage, &g.cammie.opts)
+
+	// Draw the camera to the screen.
+	g.cammie.Draw(screen)
+
+	// And, of course, debuggies.
 	if g.Debug {
-		g.DrawDebug(screen)
 		g.debug.Draw(screen)
 	}
 }
@@ -266,5 +271,7 @@ func (g *Game) Layout(ow, oh int) (int, int) {
 	if g.continentImage == nil || (g.continentImage.Bounds().Dx() != ow || g.continentImage.Bounds().Dy() != oh) {
 		g.continentImage = ebiten.NewImage(ow, oh)
 	}
+	// Refresh the camera's image as necessary.
+	g.cammie.Layout(ow, oh)
 	return ow, oh
 }
