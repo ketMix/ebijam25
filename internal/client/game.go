@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/ketMix/ebijam25/internal/log"
 	"github.com/ketMix/ebijam25/internal/message/event"
@@ -19,6 +18,7 @@ type Game struct {
 	Joiner
 	world.State
 	log              *slog.Logger
+	debug            Debug
 	continentImage   *ebiten.Image
 	cameraX, cameraY float64
 	cameraLock       bool
@@ -31,6 +31,7 @@ type Game struct {
 // Setup sets up our event and request hooks.
 func (g *Game) Setup() {
 	g.log = log.New("game", "client")
+	g.debug.Setup()
 	g.EventBus = *event.NewBus("client")
 
 	// **** Event -> local state change hooks.
@@ -200,46 +201,35 @@ func (g *Game) DrawDebug(screen *ebiten.Image) {
 		return
 	}
 
-	y := func() func() int {
-		currentY := 10
-		return func() int {
-			y := currentY
-			currentY += 20
-			return y
-		}
-	}()
+	systemString := "System Info:\n" +
+		fmt.Sprintf(" Screen Size: %dx%d\n", screen.Bounds().Dx(), screen.Bounds().Dy()) +
+		fmt.Sprintf(" FPS: %.2f | TPS: %.2f\n", ebiten.ActualFPS(), ebiten.ActualTPS()) +
+		fmt.Sprintf(" Tickrate: %d\n", g.State.Tickrate) +
+		"\n"
 
-	// Draw the comprehenisive debug info.
-	// System Info
-	x := 10
-	ebitenutil.DebugPrintAt(screen, "System Info:\n", x-5, y())
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Screen Size: %dx%d", screen.Bounds().Dx(), screen.Bounds().Dy()), x, y())
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %.2f | TPS: %.2f", ebiten.ActualFPS(), ebiten.ActualTPS()), x, y())
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Tickrate: %d", g.State.Tickrate), x, y())
-	y()
-
-	// Session Info
-	ebitenutil.DebugPrintAt(screen, "Session Info:", x-5, y())
+	sessionString := "Session Info:\n"
 	if g.State.Continent == nil {
-		ebitenutil.DebugPrintAt(screen, "Continent not initialized", x, y())
+		sessionString += " Continent not initialized\n"
 	} else {
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Continent Seed: %d", g.State.Continent.Sneed), x, y())
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Continent Size: %d", len(g.Continent.Fiefs)), x, y())
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player ID: %d | Mob ID: %d", g.PlayerID, g.MobID), x, y())
+		sessionString += fmt.Sprintf(" Continent Seed: %d\n", g.State.Continent.Sneed) +
+			fmt.Sprintf(" Continent Size: %d\n", len(g.Continent.Fiefs)) +
+			fmt.Sprintf(" Player ID: %d | Mob ID: %d\n", g.PlayerID, g.MobID) +
+			"\n"
 	}
-	y()
 
-	// Player Info
-	p := g.Continent.Mobs.FindByID(g.MobID)
-	ebitenutil.DebugPrintAt(screen, "Player Info:", x-5, y())
-	if p == nil {
-		ebitenutil.DebugPrintAt(screen, "Player not found", x, y())
+	playerString := "Player Info:\n"
+	if p := g.Continent.Mobs.FindByID(g.MobID); p == nil {
+		playerString += " Player not found\n"
 	} else {
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("X: %.2f | Y: %.2f", p.X, p.Y), x, y())
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Target X: %.2f | Target Y: %.2f", p.TargetX, p.TargetY), x, y())
+		playerString += fmt.Sprintf(" X: %.2f | Y: %.2f\n", p.X, p.Y) +
+			fmt.Sprintf(" Target X: %.2f | Target Y: %.2f\n", p.TargetX, p.TargetY) +
+			"\n"
 	}
+
 	mX, mY := ebiten.CursorPosition()
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Cursor: (%d, %d)", mX, mY), x, y())
+	cursorString := fmt.Sprintf(" Cursor: (%d, %d)\n", mX, mY)
+
+	g.debug.setLeftText(systemString + sessionString + playerString + cursorString)
 }
 
 // Draw draws da game.
@@ -267,6 +257,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.continentImage, ops)
 	if g.Debug {
 		g.DrawDebug(screen)
+		g.debug.Draw(screen)
 	}
 }
 
