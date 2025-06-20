@@ -13,14 +13,15 @@ type Event interface {
 }
 
 type Bus struct {
-	log         *slog.Logger
-	debugName   string
-	events      []Event
-	nextEvents  []Event
-	processing  bool
-	handlers    map[string][]func(Event)
-	eventToPipe map[string][]*Bus
-	NoQueue     bool // If true, events are processed immediately without queuing
+	log            *slog.Logger
+	debugName      string
+	events         []Event
+	nextEvents     []Event
+	processing     bool
+	prefixHandlers map[string][]func(Event) // Handlers for events with specific prefixes
+	handlers       map[string][]func(Event)
+	eventToPipe    map[string][]*Bus
+	NoQueue        bool // If true, events are processed immediately without queuing
 }
 
 func (b *Bus) Publish(event Event) {
@@ -45,11 +46,31 @@ func (b *Bus) Subscribe(eventType string, handler func(Event)) {
 	b.handlers[eventType] = append(b.handlers[eventType], handler)
 }
 
+func (b *Bus) SubscribePrefix(prefix string, handler func(Event)) {
+	if b.prefixHandlers == nil {
+		b.prefixHandlers = make(map[string][]func(Event))
+	}
+	b.log.Debug("subscribe prefix", "prefix", prefix)
+	b.prefixHandlers[prefix] = append(b.prefixHandlers[prefix], handler)
+}
+
 func (b *Bus) ProcessEvent(event Event) {
 	if handlers, ok := b.handlers[event.Type()]; ok {
 		for _, handler := range handlers {
 			b.log.Debug("handle", "event", event.Type())
 			handler(event)
+		}
+	}
+
+	// Handle prefix handlers.
+	if b.prefixHandlers != nil {
+		for prefix, handlers := range b.prefixHandlers {
+			if strings.HasPrefix(event.Type(), prefix) {
+				b.log.Debug("handle prefix", "event", event.Type(), "prefix", prefix)
+				for _, handler := range handlers {
+					handler(event)
+				}
+			}
 		}
 	}
 
