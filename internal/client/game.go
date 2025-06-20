@@ -221,12 +221,16 @@ func (g *Game) UpdateDebug() {
 	}
 
 	playerString := "Player Info:\n"
-	if p := g.Continent.Mobs.FindByID(g.MobID); p == nil {
-		playerString += " Player not found\n"
+	if g.Continent == nil {
+		playerString += " Continent not initialized\n"
 	} else {
-		playerString += fmt.Sprintf(" X: %.2f | Y: %.2f\n", p.X, p.Y) +
-			fmt.Sprintf(" Target X: %.2f | Target Y: %.2f\n", p.TargetX, p.TargetY) +
-			"\n"
+		if p := g.Continent.Mobs.FindByID(g.MobID); p == nil {
+			playerString += " Player not found\n"
+		} else {
+			playerString += fmt.Sprintf(" X: %.2f | Y: %.2f\n", p.X, p.Y) +
+				fmt.Sprintf(" Target X: %.2f | Target Y: %.2f\n", p.TargetX, p.TargetY) +
+				"\n"
+		}
 	}
 
 	mX, mY := ebiten.CursorPosition()
