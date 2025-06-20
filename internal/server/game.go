@@ -2,6 +2,7 @@ package server
 
 import (
 	"log/slog"
+	"math/rand"
 	"slices"
 
 	"github.com/ketMix/ebijam25/internal/log"
@@ -32,13 +33,14 @@ type Game struct {
 // Setup sets up event subscriptions.
 func (g *Game) Setup() {
 	g.log = log.New("game", "server")
+	seed := rand.Intn(1000000)                   // Random seed for world generation
+	g.State.Continent = world.NewContinent(seed) // Create a new continent with the seed and dimensions
 	g.State.Tickrate = 5
 	g.EventBus = *event.NewBus("server")
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
-		if mob := g.Mobs.FindByID(evt.ID); mob != nil {
-			mob.X = float64(evt.X)
-			mob.Y = float64(evt.Y)
+		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
+			g.Continent.MoveMob(mob, float64(evt.X), float64(evt.Y))
 			// TODO: Periodically send mob position updates to players
 			// For now just send it, I guess.
 			//g.SendVisibleMobEvent(mob, e)
@@ -59,9 +61,8 @@ func (g *Game) Setup() {
 			ID:       player.ID,
 		})
 		// Create a new mob for the player.
-		mob := world.NewMob(player.ID, g.mobID.Next(), 100, 100)
+		mob := g.Continent.NewMob(player.ID, g.mobID.Next(), 100, 100)
 		g.players[len(g.players)-1].MobID = mob.ID
-		g.Mobs.Add(mob)
 
 		// Let the player know who they are.
 		g.EventBus.Publish(&event.MetaWelcome{
@@ -79,7 +80,7 @@ func (g *Game) Setup() {
 			return
 		}
 		player := g.players[0] // For now, just use the first player.
-		if mob := g.Mobs.FindByID(player.MobID); mob != nil {
+		if mob := g.Continent.Mobs.FindByID(player.MobID); mob != nil {
 			mob.TargetX = float64(evt.X)
 			mob.TargetY = float64(evt.Y)
 			g.SendVisibleMobEvent(mob, &event.MobMove{
@@ -94,15 +95,16 @@ func (g *Game) Setup() {
 	})
 
 	// Create a fake mob a distance away to test mob visibility.
-	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 300, 300))
-	g.Mobs.Add(world.NewMob(2, g.mobID.Next(), 200, 200))
+	g.Continent.NewMob(2, g.mobID.Next(), 300, 300)
+	g.Continent.NewMob(2, g.mobID.Next(), 200, 200)
+
 	// For testing, let's add 100 schlubs.
-	/*for range 100 {
-		schlub := &world.Schlub{
-			ID: g.mobID.Next(),
-		}
-		g.Mobs[len(g.Mobs)-1].Constituents = append(g.Mobs[len(g.Mobs)-1].Constituents, schlub)
-	}*/
+	// for range 100 {
+	// 	schlub := &world.Schlub{
+	// 		ID: g.mobID.Next(),
+	// 	}
+	// 	g.Mobs[len(g.Mobs)-1].Constituents = append(g.Mobs[len(g.Mobs)-1].Constituents, schlub)
+	// }
 }
 
 // Update updates da world.
@@ -144,13 +146,7 @@ func (g *Game) Update() {
 		}
 	}
 
-	for _, mob := range g.Mobs {
-		g.UpdateMob(mob)
-	}
-
-	/*for _, resource := range g.Resources {
-		// Update resource logic
-	}*/
+	g.UpdateContinent()
 }
 
 // RefreshVisibleMobs sends MobSpawn to players for mobs that are now visible and MobDespawn for mobs that are no longer visible.
@@ -158,8 +154,8 @@ func (g *Game) RefreshVisibleMobs(player *Player) {
 	if player == nil {
 		return
 	}
-	if mob := g.Mobs.FindByID(player.MobID); mob != nil {
-		visibleMobs := g.Mobs.FindVisible(player.MobID)
+	if mob := g.Continent.Mobs.FindByID(player.MobID); mob != nil {
+		visibleMobs := g.Continent.Mobs.FindVisible(player.MobID)
 		for _, visibleMob := range visibleMobs {
 			if !slices.Contains(player.VisibleMobIDs, visibleMob.ID) {
 				player.VisibleMobIDs = append(player.VisibleMobIDs, visibleMob.ID)
@@ -170,8 +166,8 @@ func (g *Game) RefreshVisibleMobs(player *Player) {
 		}
 		// Check for mobs that are no longer visible
 		for i := len(player.VisibleMobIDs) - 1; i >= 0; i-- {
-			if !slices.Contains(visibleMobs, g.Mobs.FindByID(player.VisibleMobIDs[i])) {
-				g.HideMobFrom(player, g.Mobs.FindByID(player.VisibleMobIDs[i]))
+			if !slices.Contains(visibleMobs, g.Continent.Mobs.FindByID(player.VisibleMobIDs[i])) {
+				g.HideMobFrom(player, g.Continent.Mobs.FindByID(player.VisibleMobIDs[i]))
 				// Notify the player about the mob that is no longer visible
 				g.log.Debug("mob no longer visible", "player", player.MobID, "mob", player.VisibleMobIDs[i])
 				player.VisibleMobIDs = append(player.VisibleMobIDs[:i], player.VisibleMobIDs[i+1:]...)

@@ -8,8 +8,11 @@ import (
 	"github.com/ketMix/ebijam25/internal/world"
 )
 
-// DrawMob draws a mob on the screen.
+// DrawMob draws a mobs on the screen.
 func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob) {
+	if mob == nil {
+		return
+	}
 	radius := mob.Radius()
 	vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), 1, color.NRGBA{255, 0, 255, 255}, true)
 

@@ -67,24 +67,12 @@ type Mob struct {
 	Constituents     []Constituent
 }
 
-// NewMob creates a new Mob instance.
-func NewMob(owner ID, id ID, x, y float64) *Mob {
-	return &Mob{
-		OwnerID: owner,
-		ID:      id,
-		X:       x,
-		Y:       y,
-		TargetX: x,
-		TargetY: y,
-	}
-}
-
 // Update does Mob logic, woo
 func (m *Mob) Update(state *State) {
 	speed := 1.0 * float64(state.Tickrate)
 	// Acquire our target mob if we have one set.
 	if m.TargetID != 0 {
-		if mob := state.Mobs.FindByID(m.TargetID); mob != nil {
+		if mob := state.Continent.Mobs.FindByID(m.TargetID); mob != nil {
 			m.TargetX = mob.X
 			m.TargetY = mob.Y
 		} else {

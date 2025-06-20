@@ -8,3 +8,22 @@ func CircleIntersectsCircle(x1, y1, r1, x2, y2, r2 float64) bool {
 	radiiSum := r1 + r2
 	return distanceSquared <= radiiSum*radiiSum
 }
+
+func CircleIntersectsBox(cx, cy, cr, bx, by, bw, bh float64) bool {
+	closestX := clamp(cx, bx, bx+bw)
+	closestY := clamp(cy, by, by+bh)
+
+	dx := cx - closestX
+	dy := cy - closestY
+	return (dx*dx + dy*dy) <= (cr * cr)
+}
+
+func clamp(value, min, max float64) float64 {
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
+}

@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/ketMix/ebijam25/internal/log"
 	"github.com/ketMix/ebijam25/internal/message/event"
@@ -17,7 +18,9 @@ import (
 type Game struct {
 	Joiner
 	world.State
-	log *slog.Logger
+	log            *slog.Logger
+	continentImage *ebiten.Image
+	Debug          bool
 	// NOTE: This will be removed if we switch to storing all schlub data in the ID.
 	pendingConstituents pendingConstituentsList
 	Constituents        []world.Constituent // oof.
@@ -41,11 +44,17 @@ func (g *Game) Setup() {
 		evt := e.(*event.MetaWelcome)
 		g.PlayerID = evt.ID
 		g.MobID = evt.MobID
+		g.State.Continent = world.NewContinent(evt.Seed)
 	})
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobSpawn)
-		mob := world.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
-		g.Mobs.Add(mob)
+		if g.Continent == nil {
+			g.log.Error("mob spawn event received but continent not initialized")
+			return
+		}
+
+		mob := g.Continent.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
+
 		// NOTE: This will be removed if we switch to storing all schlub data in the ID.
 		// Check if we need constituents.
 		for _, constituent := range evt.Constituents {
@@ -64,8 +73,8 @@ func (g *Game) Setup() {
 	})
 	g.EventBus.Subscribe((event.MobDespawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobDespawn)
-		if mob := g.Mobs.FindByID(evt.ID); mob != nil {
-			g.Mobs.Remove(mob)
+		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
+			g.Continent.RemoveMob(mob)
 			g.log.Debug("mob despawned", "id", evt.ID)
 		} else {
 			g.log.Warn("mob despawned but not found", "id", evt.ID)
@@ -73,19 +82,18 @@ func (g *Game) Setup() {
 	})
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
-		if mob := g.Mobs.FindByID(evt.ID); mob != nil {
-			mob.X = float64(evt.X)
-			mob.Y = float64(evt.Y)
+		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
+			g.Continent.MoveMob(mob, float64(evt.X), float64(evt.Y))
 			g.log.Debug("mob position updated", "id", evt.ID, "x", evt.X, "y", evt.Y)
 		}
 	})
 	g.EventBus.Subscribe((event.MobMove{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobMove)
-		if mob := g.Mobs.FindByID(evt.ID); mob != nil {
+		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
 			mob.TargetX = float64(evt.X)
 			mob.TargetY = float64(evt.Y)
 			mob.TargetID = evt.TargetID
-			g.log.Debug("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
+			g.log.Info("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
 		}
 	})
 	// Schlubbin' NOTE: This will be removed if we switch to storing all schlub data in the ID.
@@ -103,7 +111,7 @@ func (g *Game) Setup() {
 				newSchlub := &world.Schlub{
 					ID: schlub.ID,
 				}
-				if mob := g.Mobs.FindByID(pending.MobID); mob != nil {
+				if mob := g.Continent.Mobs.FindByID(pending.MobID); mob != nil {
 					mob.Constituents = append(mob.Constituents, newSchlub)
 					g.Constituents = append(g.Constituents, newSchlub)
 					g.log.Debug("schlub created", "mobID", pending.MobID, "schlubID", schlub.ID)
@@ -141,6 +149,11 @@ func (g *Game) Update() error {
 		g.log.Debug("move request sent", "x", x, "y", y)
 	}
 
+	if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
+		g.Debug = !g.Debug
+		g.log.Info("debug mode toggled", "enabled: ", g.Debug)
+	}
+
 	// Update the thingz.
 	g.EventBus.ProcessEvents()
 
@@ -150,14 +163,82 @@ func (g *Game) Update() error {
 	return nil
 }
 
+func (g *Game) DrawDebug(screen *ebiten.Image) {
+	if !g.Debug {
+		return
+	}
+
+	y := func() func() int {
+		currentY := 10
+		return func() int {
+			y := currentY
+			currentY += 20
+			return y
+		}
+	}()
+
+	// Draw the comprehenisive debug info.
+	// System Info
+	x := 10
+	ebitenutil.DebugPrintAt(screen, "System Info:\n", x-5, y())
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Screen Size: %dx%d", screen.Bounds().Dx(), screen.Bounds().Dy()), x, y())
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %.2f | TPS: %.2f", ebiten.ActualFPS(), ebiten.ActualTPS()), x, y())
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Tickrate: %d", g.State.Tickrate), x, y())
+	y()
+
+	// Session Info
+	ebitenutil.DebugPrintAt(screen, "Session Info:", x-5, y())
+	if g.State.Continent == nil {
+		ebitenutil.DebugPrintAt(screen, "Continent not initialized", x, y())
+	} else {
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Continent Seed: %d", g.State.Continent.Sneed), x, y())
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Continent Size: %d", len(g.Continent.Fiefs)), x, y())
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player ID: %d | Mob ID: %d", g.PlayerID, g.MobID), x, y())
+	}
+	y()
+
+	// Player Info
+	p := g.Continent.Mobs.FindByID(g.MobID)
+	ebitenutil.DebugPrintAt(screen, "Player Info:", x-5, y())
+	if p == nil {
+		ebitenutil.DebugPrintAt(screen, "Player not found", x, y())
+	} else {
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("X: %.2f | Y: %.2f", p.X, p.Y), x, y())
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Target X: %.2f | Target Y: %.2f", p.TargetX, p.TargetY), x, y())
+	}
+	mX, mY := ebiten.CursorPosition()
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Cursor: (%d, %d)", mX, mY), x, y())
+}
+
 // Draw draws da game.
 func (g *Game) Draw(screen *ebiten.Image) {
-	for _, mob := range g.Mobs {
-		g.DrawMob(screen, mob)
+	if g.continentImage == nil {
+		return
+	}
+
+	g.continentImage.Clear()
+	g.DrawContinent(g.continentImage)
+
+	// Center image on player
+	ops := &ebiten.DrawImageOptions{}
+	if mob := g.Continent.Mobs.FindByID(g.MobID); mob != nil {
+		ops.GeoM.Translate(-mob.X+float64(screen.Bounds().Dx()/2),
+			-mob.Y+float64(screen.Bounds().Dy()/2))
+	} else {
+		g.log.Warn("draw called but mob not found", "mobID", g.MobID)
+	}
+
+	// Draw the image buffer to the screen.
+	screen.DrawImage(g.continentImage, ops)
+	if g.Debug {
+		g.DrawDebug(screen)
 	}
 }
 
 func (g *Game) Layout(ow, oh int) (int, int) {
 	// Return the original dimensions for now.
+	if g.continentImage == nil || (g.continentImage.Bounds().Dx() != ow || g.continentImage.Bounds().Dy() != oh) {
+		g.continentImage = ebiten.NewImage(ow, oh)
+	}
 	return ow, oh
 }
