@@ -6,6 +6,7 @@ import (
 
 // State represents the current state of the game world.
 type State struct {
+	Seed         int // The seed used for world generation.
 	Tickrate     int // The current tick rate of the world.
 	EventBus     event.Bus
 	Continent    *Continent    // The current continent of the game world.
