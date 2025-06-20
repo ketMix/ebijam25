@@ -18,9 +18,11 @@ import (
 type Game struct {
 	Joiner
 	world.State
-	log            *slog.Logger
-	continentImage *ebiten.Image
-	Debug          bool
+	log              *slog.Logger
+	continentImage   *ebiten.Image
+	cameraX, cameraY float64
+	cameraLock       bool
+	Debug            bool
 	// NOTE: This will be removed if we switch to storing all schlub data in the ID.
 	pendingConstituents pendingConstituentsList
 	Constituents        []world.Constituent // oof.
@@ -154,6 +156,36 @@ func (g *Game) Update() error {
 		g.log.Info("debug mode toggled", "enabled: ", g.Debug)
 	}
 
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		g.cameraLock = !g.cameraLock
+		g.log.Info("camera lock toggled", "enabled: ", g.cameraLock)
+	}
+
+	// Move camera with WASD
+	pressedKeys := inpututil.AppendPressedKeys(nil)
+	y := 0.0
+	x := 0.0
+	mult := 1.0
+	for _, key := range pressedKeys {
+		switch key {
+		case ebiten.KeyW, ebiten.KeyUp:
+			y -= 1
+		case ebiten.KeyS, ebiten.KeyDown:
+			y += 1
+		case ebiten.KeyA, ebiten.KeyLeft:
+			x -= 1
+		case ebiten.KeyD, ebiten.KeyRight:
+			x += 1
+		case ebiten.KeyShift:
+			mult = 5.0 // Speed up camera movement with shift.
+		}
+	}
+
+	if x != 0 || y != 0 {
+		// Move the camera based on the pressed keys.
+		g.cameraX += float64(x) * mult
+		g.cameraY += float64(y) * mult
+	}
 	// Update the thingz.
 	g.EventBus.ProcessEvents()
 
@@ -219,14 +251,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.continentImage.Clear()
 	g.DrawContinent(g.continentImage)
 
-	// Center image on player
 	ops := &ebiten.DrawImageOptions{}
-	if mob := g.Continent.Mobs.FindByID(g.MobID); mob != nil {
-		ops.GeoM.Translate(-mob.X+float64(screen.Bounds().Dx()/2),
-			-mob.Y+float64(screen.Bounds().Dy()/2))
-	} else {
-		g.log.Warn("draw called but mob not found", "mobID", g.MobID)
+	// Center image on player
+	if g.cameraLock {
+		mob := g.Continent.Mobs.FindByID(g.MobID)
+		if mob != nil {
+			g.cameraX = mob.X
+			g.cameraY = mob.Y
+		}
 	}
+	ops.GeoM.Translate(-g.cameraX+float64(screen.Bounds().Dx()/2),
+		-g.cameraY+float64(screen.Bounds().Dy()/2))
 
 	// Draw the image buffer to the screen.
 	screen.DrawImage(g.continentImage, ops)
