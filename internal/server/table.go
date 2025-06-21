@@ -62,6 +62,11 @@ func (t *Table) Loop() {
 			// Create a new mob for the player.
 			mob := t.Continent.NewMob(player.ID, t.mobID.Next(), 100, 100)
 			player.MobID = mob.ID // Assign the mob ID to the player
+			// Add a single schlub.
+			fam := t.FamilyID.NextFamily()
+			t.FamilyID = fam
+			fam = fam.NextSchlub()
+			mob.AddSchlub(fam)
 
 			welcome, _ := message.Encode(&event.MetaWelcome{
 				Username: player.Username,
@@ -91,31 +96,6 @@ func (t *Table) Update() {
 
 	for _, player := range t.players {
 		t.RefreshVisibleMobs(player)
-		// Send any unknown constituents to the player in delayed chunks.
-		player.NextDelayedSend--
-		if player.NextDelayedSend <= 0 {
-			player.NextDelayedSend = 10 // TODO: Make this an actual thought out value.
-			if len(player.UnknownConstituents) > 0 {
-				maxSend := 50
-				if len(player.UnknownConstituents) < maxSend {
-					maxSend = len(player.UnknownConstituents)
-				}
-				toSend := player.UnknownConstituents[:maxSend]
-
-				var schlubCreate []event.SchlubCreate
-				for _, constituentID := range toSend {
-					schlubCreate = append(schlubCreate, event.SchlubCreate{
-						ID: constituentID,
-						// TODO: Other props.
-					})
-				}
-				player.bus.Publish(&event.SchlubCreateList{
-					Schlubs: schlubCreate,
-				})
-				player.UnknownConstituents = player.UnknownConstituents[maxSend:]
-				player.KnownConstituents = append(player.KnownConstituents, toSend...)
-			}
-		}
 		player.bus.ProcessEvents()
 	}
 

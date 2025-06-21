@@ -73,6 +73,17 @@ func (s SchlubID) NextSchlub() SchlubID {
 	return SchlubID((int(s) & 0xFFC00000) | (schlubID << 12))
 }
 
+// NextSchlubs returns count new schlub IDs from the start of the schlub ID. If the original schlub ID should change, assign it to the last schlub returned.
+func (s SchlubID) NextSchlubs(count int) []SchlubID {
+	var schlubs []SchlubID
+	s2 := s
+	for range count {
+		s2 = s.NextSchlub()
+		schlubs = append(schlubs, s2)
+	}
+	return schlubs
+}
+
 func (s SchlubID) SchlubID() int {
 	// Extract the 10-bit schlub ID from the SchlubID
 	return (int(s) >> 12) & 0x3FF

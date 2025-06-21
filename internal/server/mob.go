@@ -56,21 +56,18 @@ func (t *Table) SendMobTo(mob *world.Mob, player *Player) {
 		return
 	}
 
-	constituents := mob.ConstituentsToIDs()
-	// These will be sent to the player over time.
-	for _, constituent := range constituents {
-		if !slices.Contains(player.KnownConstituents, constituent) {
-			player.UnknownConstituents = append(player.UnknownConstituents, constituent)
-		}
+	var schlubs []int
+	for _, s := range mob.Schlubs {
+		schlubs = append(schlubs, int(s))
 	}
 
 	// Send the mob spawn event to the player.
 	evt := &event.MobSpawn{
-		ID:           mob.ID,
-		Owner:        mob.OwnerID,
-		X:            int(mob.X),
-		Y:            int(mob.Y),
-		Constituents: constituents, // Might as well send the constituent IDs as well. Probably not a big issue.
+		ID:      mob.ID,
+		Owner:   mob.OwnerID,
+		X:       int(mob.X),
+		Y:       int(mob.Y),
+		Schlubs: schlubs,
 	}
 
 	player.bus.Publish(evt)

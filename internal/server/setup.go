@@ -38,6 +38,14 @@ func (t *Table) Setup() {
 	})
 
 	// Create a fake mob a distance away to test mob visibility.
-	t.Continent.NewMob(2, t.mobID.Next(), 300, 300)
-	t.Continent.NewMob(2, t.mobID.Next(), 200, 200)
+	fam := t.FamilyID.NextFamily()
+	t.FamilyID = fam.NextSchlub()
+	mob := t.Continent.NewMob(2, t.mobID.Next(), 300, 300)
+	mob.AddSchlub(fam)
+
+	fam = t.FamilyID.NextFamily()
+	schlubs := fam.NextSchlubs(50)
+	t.FamilyID = schlubs[len(schlubs)-1]
+	mob = t.Continent.NewMob(2, t.mobID.Next(), 200, 200)
+	mob.AddSchlub(schlubs...)
 }

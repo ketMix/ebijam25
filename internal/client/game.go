@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 	"log/slog"
-	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -22,9 +21,6 @@ type Game struct {
 	continentImage *ebiten.Image
 	cammie         Cammie
 	Debug          bool
-	// NOTE: This will be removed if we switch to storing all schlub data in the ID.
-	pendingConstituents pendingConstituentsList
-	Constituents        []world.Constituent // oof.
 }
 
 // Setup sets up our event and request hooks.
@@ -56,23 +52,15 @@ func (g *Game) Setup() {
 			return
 		}
 
-		mob := g.Continent.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
-
-		// NOTE: This will be removed if we switch to storing all schlub data in the ID.
-		// Check if we need constituents.
-		for _, constituent := range evt.Constituents {
-			if index := slices.IndexFunc(g.Constituents, func(c world.Constituent) bool {
-				// for now...
-				return c.(*world.Schlub).ID == constituent
-			}); index == -1 {
-				g.pendingConstituents.Add(evt.ID, constituent)
-			} else {
-				// Hey, we have it alreadie.
-				mob.Constituents = append(mob.Constituents, g.Constituents[index])
-			}
+		var schlubs []world.SchlubID
+		for _, s := range evt.Schlubs {
+			schlubs = append(schlubs, world.SchlubID(s))
 		}
 
-		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y)
+		mob := g.Continent.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
+		mob.AddSchlub(schlubs...)
+
+		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y, "schlubs", len(schlubs))
 	})
 	g.EventBus.Subscribe((event.MobDespawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobDespawn)
@@ -97,31 +85,6 @@ func (g *Game) Setup() {
 			mob.TargetY = float64(evt.Y)
 			mob.TargetID = evt.TargetID
 			g.log.Info("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
-		}
-	})
-	// Schlubbin' NOTE: This will be removed if we switch to storing all schlub data in the ID.
-	g.EventBus.Subscribe((event.SchlubCreateList{}).Type(), func(e event.Event) {
-		evt := e.(*event.SchlubCreateList)
-		for _, schlub := range evt.Schlubs {
-			index := slices.IndexFunc(g.pendingConstituents, func(pc pendingMobConstituent) bool {
-				return pc.Constituent == schlub.ID
-			})
-			if index != -1 {
-				pending := g.pendingConstituents[index]
-				// Remove pending.
-				g.pendingConstituents = append(g.pendingConstituents[:index], g.pendingConstituents[index+1:]...)
-				// Create new schlubbo.
-				newSchlub := &world.Schlub{
-					ID: schlub.ID,
-				}
-				if mob := g.Continent.Mobs.FindByID(pending.MobID); mob != nil {
-					mob.Constituents = append(mob.Constituents, newSchlub)
-					g.Constituents = append(g.Constituents, newSchlub)
-					g.log.Debug("schlub created", "mobID", pending.MobID, "schlubID", schlub.ID)
-				} else {
-					g.log.Warn("schlub create event received but mob not found", "mobID", pending.MobID)
-				}
-			}
 		}
 	})
 
