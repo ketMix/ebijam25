@@ -1,0 +1,1 @@
+This directory contains base data structures that are shared between the client and server. There should be no use of ebitengine packages here. There should also be no use of networking/websockets packages, but nothing will break if it is somehow truly needed.
