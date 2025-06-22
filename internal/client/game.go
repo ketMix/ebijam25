@@ -123,6 +123,16 @@ func (g *Game) Update() error {
 		g.log.Debug("move request sent", "x", x, "y", y)
 	}
 
+	// Handle mouse wheel input for zooming.
+	dX, dY := ebiten.Wheel()
+	if dX != 0 || dY != 0 {
+		if dY < 0 {
+			g.cammie.UpdateZoom(-0.1) // Zoom out
+		} else if dY > 0 {
+			g.cammie.UpdateZoom(0.1) // Zoom in
+		}
+	}
+
 	if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
 		g.Debug = !g.Debug
 		g.log.Info("debug mode toggled", "enabled: ", g.Debug)

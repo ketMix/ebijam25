@@ -49,8 +49,14 @@ func (c *Cammie) AddPosition(dx, dy float64) {
 	c.y += dy
 }
 
-func (c *Cammie) SetZoom(zoom float64) {
-	c.zoom = zoom
+func (c *Cammie) UpdateZoom(dz float64) {
+	// Update zoom level, ensuring it stays within a reasonable range.
+	c.zoom += dz
+	if c.zoom < 0.1 {
+		c.zoom = 0.1
+	} else if c.zoom > 10.0 {
+		c.zoom = 10.0
+	}
 }
 
 func (c *Cammie) Locked() bool {
