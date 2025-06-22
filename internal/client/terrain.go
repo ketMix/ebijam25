@@ -7,19 +7,26 @@ import (
 	"github.com/ketMix/ebijam25/internal/world"
 )
 
-var terrainCache map[world.Terrain]*ebiten.Image
+var terrainCache []*ebiten.Image
 
 func DrawTerrain(screen *ebiten.Image, opts *ebiten.DrawImageOptions, terrain world.Terrain) {
-	if terrainCache == nil {
-		terrainCache = make(map[world.Terrain]*ebiten.Image)
+	if len(terrainCache) == 0 {
+		terrainCache = make([]*ebiten.Image, world.TerrainCount)
 	}
-	img, ok := terrainCache[terrain]
-	if !ok {
-
+	if terrain <= world.TerrainNone || int(terrain) >= int(world.TerrainCount) {
+		screen.Fill(color.NRGBA{255, 0, 0, 255}) // Invalid terrain
+		return
+	}
+	img := terrainCache[terrain]
+	if img == nil {
 		// TODO: terrain texs
 		var a uint8 = 100
 		c := color.NRGBA{128, 128, 128, 255}
 		switch terrain {
+		case world.TerrainNone:
+			c = color.NRGBA{128, 128, 128, 255} // Default gray for no terrain
+		case world.TerrainCount:
+			c = color.NRGBA{128, 128, 128, 255} // Default gray for unknown terrain
 		case world.TerrainGrass:
 			c = color.NRGBA{34, 139, 34, 255}
 		case world.TerrainWater:
@@ -42,6 +49,5 @@ func DrawTerrain(screen *ebiten.Image, opts *ebiten.DrawImageOptions, terrain wo
 		img.Fill(c)
 		terrainCache[terrain] = img
 	}
-
 	screen.DrawImage(img, opts)
 }
