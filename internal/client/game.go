@@ -63,6 +63,12 @@ func (g *Game) Setup() {
 		mob.AddSchlub(schlubs...)
 
 		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y, "schlubs", len(schlubs))
+		if mob.ID == g.MobID {
+			player := g.Continent.Mobs.FindByID(g.MobID)
+			if player != nil {
+				g.cammie.SetPosition(player.X, player.Y)
+			}
+		}
 	})
 	g.EventBus.Subscribe((event.MobDespawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobDespawn)
