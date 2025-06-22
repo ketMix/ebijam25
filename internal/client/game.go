@@ -19,6 +19,7 @@ type Game struct {
 	log            *slog.Logger
 	debug          Debug
 	continentImage *ebiten.Image
+	fiefImages     [][]*ebiten.Image
 	cammie         Cammie
 	Debug          bool
 }
@@ -44,6 +45,8 @@ func (g *Game) Setup() {
 		g.PlayerID = evt.ID
 		g.MobID = evt.MobID
 		g.State.Continent = world.NewContinent(evt.Seed)
+		// Make our fief images.
+		g.MakeFiefImages(evt.Seed)
 	})
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobSpawn)

@@ -1,31 +1,15 @@
 package world
 
-import (
-	"image/color"
-
-	"github.com/hajimehoshi/ebiten/v2"
-)
+const FiefSpan = 10
+const FiefSize = 64
 
 type Fief struct {
 	Mobs Mobs
-	Img  *ebiten.Image
 }
 
 func NewFief(sneed int, size int) *Fief {
-	// Determine fief render based on seed.
-	img := ebiten.NewImage(size, size)
-	randomColor := func() color.Color {
-		return color.RGBA{
-			R: uint8((sneed*31 + 17) % 256),
-			G: uint8((sneed*37 + 29) % 256),
-			B: uint8((sneed*41 + 43) % 256),
-			A: 50,
-		}
-	}
-	img.Fill(randomColor())
 	return &Fief{
 		Mobs: Mobs{},
-		Img:  img,
 	}
 }
 
@@ -38,21 +22,18 @@ type Continent struct {
 }
 
 func NewContinent(sneed int) *Continent {
-	span := 10     // Default span
-	fiefSize := 64 // Default fief size
-
-	fiefs := make([][]*Fief, span)
+	fiefs := make([][]*Fief, FiefSpan)
 	for i := range fiefs {
-		fiefs[i] = make([]*Fief, span)
+		fiefs[i] = make([]*Fief, FiefSpan)
 		for j := range fiefs[i] {
-			fiefs[i][j] = NewFief(sneed+i+j, fiefSize)
+			fiefs[i][j] = NewFief(sneed+i+j, FiefSize)
 		}
 	}
 	return &Continent{
 		Sneed:    sneed,
-		span:     span,
+		span:     FiefSpan,
 		Fiefs:    fiefs,
-		FiefSize: fiefSize,
+		FiefSize: FiefSize,
 	}
 }
 

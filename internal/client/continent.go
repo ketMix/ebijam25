@@ -45,8 +45,9 @@ func (g *Game) DrawContinent(screen *ebiten.Image) {
 				ebitenutil.DebugPrintAt(screen,
 					fmt.Sprintf("(%d,%d)\nMobs: %d", x, y, len(fief.Mobs)),
 					x*g.Continent.FiefSize+2, y*g.Continent.FiefSize+2)
-			} else if fief.Img != nil {
-				screen.DrawImage(fief.Img, ops)
+			} else if img := g.fiefImages[y][x]; img != nil {
+				// We do be assuming.
+				screen.DrawImage(img, ops)
 			}
 
 			for _, mob := range fief.Mobs {
