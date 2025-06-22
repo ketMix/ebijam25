@@ -5,6 +5,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/ketMix/ebijam25/internal/client"
+	"github.com/ketMix/ebijam25/internal/message/event"
 	"github.com/ketMix/ebijam25/internal/message/request"
 	"github.com/ketMix/ebijam25/internal/server"
 )
@@ -13,7 +14,7 @@ type Game struct {
 	Managers  Managers
 	client    client.Game
 	localGame bool
-	server    server.Game
+	garçon    server.Garçon
 }
 
 func NewGame(localGame bool) *Game {
@@ -25,15 +26,16 @@ func NewGame(localGame bool) *Game {
 	g.client.EventBus.NoQueue = true
 
 	if localGame {
-		g.server.Setup()
-		g.server.EventBus.NoQueue = true
-		g.server.EventBus.Pipe(&g.client.EventBus, []string{"mob-", "schlub-", "meta-"})
-		g.client.EventBus.Pipe(&g.server.EventBus, []string{"request-"})
+		// Subscribe to our own requests to automatically network send them.
+		g.client.EventBus.SubscribePrefix("request-", func(e event.Event) {
+			g.client.Send(e)
+		})
 
-		// fer now
-		g.server.Listen(8080)
-		g.client.Join("localhost:8080")
+		// Spin up our garçon and join it.
+		g.garçon.Serve(8080)
+		g.client.Join("localhost:8080", &g.client.EventBus)
 
+		// Send our join request with our name.
 		g.client.EventBus.Publish(&request.Join{
 			Username: "Player1",
 		})
@@ -44,9 +46,6 @@ func NewGame(localGame bool) *Game {
 
 func (g *Game) Update() error {
 	g.Managers.Update()
-	if g.localGame {
-		g.server.Update()
-	}
 	if err := g.client.Update(); err != nil {
 		return err
 	}

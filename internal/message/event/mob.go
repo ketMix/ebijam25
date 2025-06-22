@@ -57,7 +57,7 @@ type MobSpawn struct {
 	X     int `json:"x"`
 	Y     int `json:"y"`
 	// FIXME: This will not be cloned properly in Decode.
-	Constituents []int `json:"c"` // IDs of schlubs associated with the mob
+	Schlubs []int `json:"schlubs"` // IDs of schlubs associated with the mob
 }
 
 // Type returns the type of the MobSpawn event.

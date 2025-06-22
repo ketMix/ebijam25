@@ -7,10 +7,6 @@ import (
 	"github.com/ketMix/ebijam25/internal/message/event"
 )
 
-// Constituent is something participating in a mob.
-type Constituent interface {
-}
-
 // Mobs is a slice of mobbies, yo.
 type Mobs []*Mob
 
@@ -64,13 +60,14 @@ type Mob struct {
 	X, Y             float64 // Position of the mob in the world
 	TargetX, TargetY float64 // Target position to move to
 	TargetID         ID
-	Constituents     []Constituent
 	Stats            *Stats // Stats of the mob
+	Schlubs          []SchlubID
 }
 
 // Update does Mob logic, woo
 func (m *Mob) Update(state *State) {
 	speed := 1.0 * float64(state.Tickrate)
+
 	// Acquire our target mob if we have one set.
 	if m.TargetID != 0 {
 		if mob := state.Continent.Mobs.FindByID(m.TargetID); mob != nil {
@@ -100,12 +97,16 @@ func (m *Mob) Update(state *State) {
 	}
 }
 
+func (m *Mob) AddSchlub(schlub ...SchlubID) {
+	m.Schlubs = append(m.Schlubs, schlub...)
+}
+
 // Radius calculates the radius of the mob based on the number of constituents.
 func (m *Mob) Radius() float64 {
-	if len(m.Constituents) == 0 {
+	if len(m.Schlubs) == 0 {
 		return 1
 	}
-	return float64(len(m.Constituents)) * 2
+	return float64(len(m.Schlubs)) * 2
 }
 
 // Vision returns the mob's vision radius.
@@ -117,15 +118,4 @@ func (m *Mob) Vision() float64 {
 // Intersects checks if the mob's circle edge intersects with another mob's circle edge.
 func (m *Mob) Intersects(other *Mob) bool {
 	return CircleIntersectsCircle(m.X, m.Y, m.Radius(), other.X, other.Y, other.Radius())
-}
-
-// ConstituentsToIDs converts the mob's constituents to their IDs.
-func (m *Mob) ConstituentsToIDs() []ID {
-	ids := make([]ID, len(m.Constituents))
-	for i, c := range m.Constituents {
-		if schlub, ok := c.(*Schlub); ok {
-			ids[i] = schlub.ID
-		} // TODO: Handle others or add an ID getter.
-	}
-	return ids
 }

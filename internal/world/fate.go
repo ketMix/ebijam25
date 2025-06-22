@@ -11,8 +11,8 @@ type Fate struct {
 	certainty float64
 }
 
-func NewFate(sneed int64) Fate {
-	generator, err := noise.New(noise.OpenSimplex, sneed)
+func NewFate(sneed uint) Fate {
+	generator, err := noise.New(noise.OpenSimplex, int64(sneed))
 	if err != nil {
 		panic("failed to create fate with sneed: " + fmt.Sprint(sneed) + err.Error())
 	}

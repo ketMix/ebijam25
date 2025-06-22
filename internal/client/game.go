@@ -3,10 +3,8 @@ package client
 import (
 	"fmt"
 	"log/slog"
-	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/ketMix/ebijam25/internal/log"
 	"github.com/ketMix/ebijam25/internal/message/event"
@@ -18,19 +16,19 @@ import (
 type Game struct {
 	Joiner
 	world.State
-	log              *slog.Logger
-	continentImage   *ebiten.Image
-	cameraX, cameraY float64
-	cameraLock       bool
-	Debug            bool
-	// NOTE: This will be removed if we switch to storing all schlub data in the ID.
-	pendingConstituents pendingConstituentsList
-	Constituents        []world.Constituent // oof.
+	log            *slog.Logger
+	debug          Debug
+	continentImage *ebiten.Image
+	fiefImages     []*ebiten.Image
+	cammie         Cammie
+	Debug          bool
 }
 
 // Setup sets up our event and request hooks.
 func (g *Game) Setup() {
 	g.log = log.New("game", "client")
+	g.debug.Setup()
+	g.cammie.Setup()
 	g.EventBus = *event.NewBus("client")
 
 	// **** Event -> local state change hooks.
@@ -55,23 +53,15 @@ func (g *Game) Setup() {
 			return
 		}
 
-		mob := g.Continent.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
-
-		// NOTE: This will be removed if we switch to storing all schlub data in the ID.
-		// Check if we need constituents.
-		for _, constituent := range evt.Constituents {
-			if index := slices.IndexFunc(g.Constituents, func(c world.Constituent) bool {
-				// for now...
-				return c.(*world.Schlub).ID == constituent
-			}); index == -1 {
-				g.pendingConstituents.Add(evt.ID, constituent)
-			} else {
-				// Hey, we have it alreadie.
-				mob.Constituents = append(mob.Constituents, g.Constituents[index])
-			}
+		var schlubs []world.SchlubID
+		for _, s := range evt.Schlubs {
+			schlubs = append(schlubs, world.SchlubID(s))
 		}
 
-		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y)
+		mob := g.Continent.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
+		mob.AddSchlub(schlubs...)
+
+		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y, "schlubs", len(schlubs))
 	})
 	g.EventBus.Subscribe((event.MobDespawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobDespawn)
@@ -98,31 +88,6 @@ func (g *Game) Setup() {
 			g.log.Info("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
 		}
 	})
-	// Schlubbin' NOTE: This will be removed if we switch to storing all schlub data in the ID.
-	g.EventBus.Subscribe((event.SchlubCreateList{}).Type(), func(e event.Event) {
-		evt := e.(*event.SchlubCreateList)
-		for _, schlub := range evt.Schlubs {
-			index := slices.IndexFunc(g.pendingConstituents, func(pc pendingMobConstituent) bool {
-				return pc.Constituent == schlub.ID
-			})
-			if index != -1 {
-				pending := g.pendingConstituents[index]
-				// Remove pending.
-				g.pendingConstituents = append(g.pendingConstituents[:index], g.pendingConstituents[index+1:]...)
-				// Create new schlubbo.
-				newSchlub := &world.Schlub{
-					ID: schlub.ID,
-				}
-				if mob := g.Continent.Mobs.FindByID(pending.MobID); mob != nil {
-					mob.Constituents = append(mob.Constituents, newSchlub)
-					g.Constituents = append(g.Constituents, newSchlub)
-					g.log.Debug("schlub created", "mobID", pending.MobID, "schlubID", schlub.ID)
-				} else {
-					g.log.Warn("schlub create event received but mob not found", "mobID", pending.MobID)
-				}
-			}
-		}
-	})
 
 	// **** Request -> network send hooks.
 	g.EventBus.Subscribe((request.Move{}).Type(), func(e event.Event) {
@@ -142,11 +107,11 @@ func (g *Game) Update() error {
 	// Here is where we'd convert inputs, etc., into requests.
 	// Just for testing.
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		// For now, just send a move request to the server.
-		x, y := ebiten.CursorPosition()
+		// Convert screen coordinates to world coordinates.
+		x, y := g.cammie.ScreenToWorld(ebiten.CursorPosition())
 		g.EventBus.Publish(&request.Move{
-			X: x,
-			Y: y,
+			X: int(x),
+			Y: int(y),
 		})
 		g.log.Debug("move request sent", "x", x, "y", y)
 	}
@@ -157,8 +122,8 @@ func (g *Game) Update() error {
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		g.cameraLock = !g.cameraLock
-		g.log.Info("camera lock toggled", "enabled: ", g.cameraLock)
+		g.cammie.ToggleLocked()
+		g.log.Info("camera lock toggled", "enabled: ", g.cammie.Locked())
 	}
 
 	// Move camera with WASD
@@ -182,10 +147,18 @@ func (g *Game) Update() error {
 	}
 
 	if x != 0 || y != 0 {
-		g.cameraX += float64(x) * mult
-		g.cameraY += float64(y) * mult
+		// Move the camera based on the pressed keys.
+		g.cammie.AddPosition(x*mult, y*mult)
 	}
 	g.EventBus.ProcessEvents()
+
+	// Update the camera to reflect any positional changes.
+	g.cammie.Update()
+
+	// Update our debug info.
+	if g.Debug {
+		g.UpdateDebug()
+	}
 
 	/*for _, mob := range g.Mobs {
 		mob.Update(&g.State)
@@ -193,51 +166,41 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) DrawDebug(screen *ebiten.Image) {
-	if !g.Debug {
-		return
-	}
+func (g *Game) UpdateDebug() {
+	systemString := "System Info:\n" +
+		//fmt.Sprintf(" Screen Size: %dx%d\n", screen.Bounds().Dx(), screen.Bounds().Dy()) + // This doesn't seem necessary and due to me moving this to an update and not draw context, we don't have a screen here. Could re-add, ofc.
+		fmt.Sprintf(" FPS: %.2f | TPS: %.2f\n", ebiten.ActualFPS(), ebiten.ActualTPS()) +
+		fmt.Sprintf(" Tickrate: %d\n", g.State.Tickrate) +
+		"\n"
 
-	y := func() func() int {
-		currentY := 10
-		return func() int {
-			y := currentY
-			currentY += 20
-			return y
-		}
-	}()
-
-	// Draw the comprehenisive debug info.
-	// System Info
-	x := 10
-	ebitenutil.DebugPrintAt(screen, "System Info:\n", x-5, y())
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Screen Size: %dx%d", screen.Bounds().Dx(), screen.Bounds().Dy()), x, y())
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %.2f | TPS: %.2f", ebiten.ActualFPS(), ebiten.ActualTPS()), x, y())
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Tickrate: %d", g.State.Tickrate), x, y())
-	y()
-
-	// Session Info
-	ebitenutil.DebugPrintAt(screen, "Session Info:", x-5, y())
+	sessionString := "Session Info:\n"
 	if g.State.Continent == nil {
-		ebitenutil.DebugPrintAt(screen, "Continent not initialized", x, y())
+		sessionString += " Continent not initialized\n"
 	} else {
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Continent Seed: %d", g.State.Continent.Sneed), x, y())
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Continent Size: %d", len(g.Continent.Fiefs)), x, y())
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player ID: %d | Mob ID: %d", g.PlayerID, g.MobID), x, y())
+		sessionString += fmt.Sprintf(" Continent Seed: %d\n", g.State.Continent.Sneed) +
+			fmt.Sprintf(" Continent Size: %d\n", len(g.Continent.Fiefs)) +
+			fmt.Sprintf(" Player ID: %d | Mob ID: %d\n", g.PlayerID, g.MobID) +
+			"\n"
 	}
-	y()
 
-	// Player Info
-	p := g.Continent.Mobs.FindByID(g.MobID)
-	ebitenutil.DebugPrintAt(screen, "Player Info:", x-5, y())
-	if p == nil {
-		ebitenutil.DebugPrintAt(screen, "Player not found", x, y())
+	playerString := "Player Info:\n"
+	if g.Continent == nil {
+		playerString += " Continent not initialized\n"
 	} else {
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("X: %.2f | Y: %.2f", p.X, p.Y), x, y())
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Target X: %.2f | Target Y: %.2f", p.TargetX, p.TargetY), x, y())
+		if p := g.Continent.Mobs.FindByID(g.MobID); p == nil {
+			playerString += " Player not found\n"
+		} else {
+			playerString += fmt.Sprintf(" X: %.2f | Y: %.2f\n", p.X, p.Y) +
+				fmt.Sprintf(" Target X: %.2f | Target Y: %.2f\n", p.TargetX, p.TargetY) +
+				"\n"
+		}
 	}
+
 	mX, mY := ebiten.CursorPosition()
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Cursor: (%d, %d)", mX, mY), x, y())
+	worldX, worldY := g.cammie.ScreenToWorld(mX, mY)
+	cursorString := fmt.Sprintf(" Cursor: (%d, %d)\n", mX, mY)
+	cursorString += fmt.Sprintf(" World Coordinates: (%.2f, %.2f)\n", worldX, worldY)
+	g.debug.setLeftText(systemString + sessionString + playerString + cursorString)
 }
 
 // Draw draws da game.
@@ -246,25 +209,28 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		return
 	}
 
+	// Draw ze continentie.
 	g.continentImage.Clear()
 	g.DrawContinent(g.continentImage)
 
-	ops := &ebiten.DrawImageOptions{}
-	// Center image on player
-	if g.cameraLock {
+	// Center camera on player
+	if g.cammie.Locked() {
 		mob := g.Continent.Mobs.FindByID(g.MobID)
 		if mob != nil {
-			g.cameraX = mob.X
-			g.cameraY = mob.Y
+			g.cammie.SetPosition(mob.X, mob.Y)
 		}
 	}
-	ops.GeoM.Translate(-g.cameraX+float64(screen.Bounds().Dx()/2),
-		-g.cameraY+float64(screen.Bounds().Dy()/2))
 
-	// Draw the image buffer to the screen.
-	screen.DrawImage(g.continentImage, ops)
+	// Draw the continent to the camera.
+	g.cammie.image.Clear()
+	g.cammie.image.DrawImage(g.continentImage, &g.cammie.opts)
+
+	// Draw the camera to the screen.
+	g.cammie.Draw(screen)
+
+	// And, of course, debuggies.
 	if g.Debug {
-		g.DrawDebug(screen)
+		g.debug.Draw(screen)
 	}
 }
 
@@ -273,5 +239,7 @@ func (g *Game) Layout(ow, oh int) (int, int) {
 	if g.continentImage == nil || (g.continentImage.Bounds().Dx() != ow || g.continentImage.Bounds().Dy() != oh) {
 		g.continentImage = ebiten.NewImage(ow, oh)
 	}
+	// Refresh the camera's image as necessary.
+	g.cammie.Layout(ow, oh)
 	return ow, oh
 }

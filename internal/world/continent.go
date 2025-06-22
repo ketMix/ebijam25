@@ -1,40 +1,36 @@
 package world
 
 import (
+	"fmt"
 	"math"
 )
 
-type ContinentSpec struct {
-	Fiefs         int // Number of fiefs per row (e.g., 10 for a 10x10 grid)
-	Tiles         int // Number of tiles per fief row(e.g., 10x10)
-	TileSize      int // Size of each tile in pixels (e.g., 128)
-	FiefPixelSpan int // Size of each fief in pixels, calculated as Tiles * TileSize
-	PixelSpan     int // Total pixel span of the continent, calculated as Fiefs * FiefPixelSpan
-}
+const ContinientFiefSpan = 9                                  // Number of fiefs per row (e.g., 10 for a 10x10 grid)
+const ContinentPixelSpan = ContinientFiefSpan * FiefPixelSpan // Total pixel span of the continent
 
 type Continent struct {
-	Sneed int64
+	Sneed uint
 	Fiefs []*Fief
 	Mobs  Mobs
 	Fate  Fate
-	Specs ContinentSpec
 }
 
-func NewContinent(sneed int64) *Continent {
-	specs := ContinentSpec{
-		Fiefs:    10,  // Default number of fiefs per row
-		Tiles:    128, // Default number of tiles per fief row
-		TileSize: 64,  // Default size of each tile in pixels
-	}
-	specs.FiefPixelSpan = specs.Tiles * specs.TileSize  // Size of each fief in pixels
-	specs.PixelSpan = specs.Fiefs * specs.FiefPixelSpan // Total pixel span of the continent
-	totalFiefs := specs.Fiefs * specs.Fiefs             // Total number of fiefs in the continent
-
+func NewContinent(sneed uint) *Continent {
 	// Initialize the continent with the given seed and specifications
+	totalFiefs := ContinientFiefSpan * ContinientFiefSpan // Total number of fiefs in the continent
+	if totalFiefs <= 0 {
+		panic("failed to create continent: total fiefs must be greater than 0")
+	}
+
 	fate := NewFate(sneed)
 	fiefs := make([]*Fief, totalFiefs)
 	for i := range totalFiefs {
-		fiefs[i] = NewFief(&fate, i)
+		x := i % ContinientFiefSpan
+		y := i / ContinientFiefSpan
+		if x < 0 || y < 0 || x >= ContinientFiefSpan || y >= ContinientFiefSpan {
+			panic("failed to create continent: fief coordinates out of bounds")
+		}
+		fiefs[i] = NewFief(&fate, x, y)
 	}
 	if len(fiefs) == 0 || fiefs[0] == nil {
 		panic("failed to create continent: no fiefs generated")
@@ -44,7 +40,6 @@ func NewContinent(sneed int64) *Continent {
 		Sneed: sneed,
 		Fate:  fate,
 		Fiefs: fiefs,
-		Specs: specs,
 	}
 }
 
@@ -63,13 +58,15 @@ func (c *Continent) NewMob(owner ID, id ID, x, y float64) *Mob {
 }
 
 func (c *Continent) GetFiefAt(x, y int) *Fief {
+	fiefNum := len(c.Fiefs)
+
 	// Determine 1-d idx based on x and y coordinates
-	if x < 0 || y < 0 || x >= c.Specs.Fiefs || y >= c.Specs.Fiefs {
+	if x < 0 || y < 0 || x >= fiefNum || y >= fiefNum {
 		// Abso-lute-ly out of bounds
 		return nil
 	}
 
-	idx := x + y*c.Specs.Fiefs
+	idx := x + y*fiefNum
 	if idx < 0 || idx >= len(c.Fiefs) {
 		// Fief-ly out of bounds
 		return nil
@@ -79,9 +76,9 @@ func (c *Continent) GetFiefAt(x, y int) *Fief {
 
 func (c *Continent) GetContainingFief(x, y float64) *Fief {
 	// Translate pixel coordinates to fief grid coordinates
-	fiefX := int(math.Floor(x / float64(c.Specs.TileSize)))
-	fiefY := int(math.Floor(y / float64(c.Specs.TileSize)))
-	return c.GetFiefAt(int(fiefX), int(fiefY))
+	fiefX := int(math.Floor(x / float64(FiefPixelSpan)))
+	fiefY := int(math.Floor(y / float64(FiefPixelSpan)))
+	return c.GetFiefAt(fiefX, fiefY)
 }
 
 func (c *Continent) GetVisibleFiefs(mob *Mob) []*Fief {
@@ -90,21 +87,26 @@ func (c *Continent) GetVisibleFiefs(mob *Mob) []*Fief {
 	}
 
 	// Slice the fief grid based on the mob's vision radius
-	fiefPixelSpan := float64(c.Specs.FiefPixelSpan)
+	fiefNum := len(c.Fiefs)
+	fiefPixelSpan := float64(FiefPixelSpan)
 	visionRadius := mob.Vision()
 	minX := max(math.Floor((mob.X-visionRadius)/fiefPixelSpan), 0)
 	minY := max(math.Floor((mob.Y-visionRadius)/fiefPixelSpan), 0)
-	maxX := min(math.Ceil((mob.X+visionRadius)/fiefPixelSpan), float64(c.Specs.Fiefs-1))
-	maxY := min(math.Ceil((mob.Y+visionRadius)/fiefPixelSpan), float64(c.Specs.Fiefs-1))
+	maxX := min(math.Ceil((mob.X+visionRadius)/fiefPixelSpan), float64(fiefNum-1))
+	maxY := min(math.Ceil((mob.Y+visionRadius)/fiefPixelSpan), float64(fiefNum-1))
 
 	visibleFiefs := []*Fief{}
 	for x := minX; x <= maxX; x++ {
 		for y := minY; y <= maxY; y++ {
 			fief := c.GetFiefAt(int(x), int(y))
 			if fief != nil {
-				if CircleIntersectsBox(mob.X, mob.Y, mob.Vision(),
+				if CircleIntersectsBox(
+					mob.X,
+					mob.Y,
+					mob.Vision(),
 					x*fiefPixelSpan, y*fiefPixelSpan,
-					fiefPixelSpan, fiefPixelSpan) {
+					fiefPixelSpan, fiefPixelSpan,
+				) {
 					visibleFiefs = append(visibleFiefs, fief)
 				}
 			}
@@ -133,10 +135,13 @@ func (c *Continent) AddMob(mob *Mob) {
 	}
 
 	fief := c.GetContainingFief(mob.X, mob.Y)
-	if fief != nil {
-		c.Mobs.Add(mob)
-		fief.Mobs.Add(mob)
+	if fief == nil {
+		fmt.Println("Failed to add mob: fief not found for coordinates", mob.X, mob.Y)
+		return
 	}
+
+	c.Mobs.Add(mob)
+	fief.Mobs.Add(mob)
 }
 
 func (c *Continent) RemoveMob(mob *Mob) {
@@ -156,14 +161,17 @@ func (c *Continent) MoveMob(mob *Mob, x, y float64) {
 		return
 	}
 
-	newX := clamp64(x, 0, float64(c.Specs.PixelSpan))
-	newY := clamp64(y, 0, float64(c.Specs.PixelSpan))
+	newX := clamp64(x, 0, float64(ContinentPixelSpan))
+	newY := clamp64(y, 0, float64(ContinentPixelSpan))
+	newFief := c.GetContainingFief(newX, newY)
+	if newFief == nil {
+		return
+	}
 
 	currentFief := c.GetContainingFief(mob.X, mob.Y)
 	mob.X = newX
 	mob.Y = newY
 
-	newFief := c.GetContainingFief(newX, newY)
 	if currentFief == newFief {
 		// Mob is already in the correct fief, no need to move
 		return
@@ -173,5 +181,4 @@ func (c *Continent) MoveMob(mob *Mob, x, y float64) {
 		currentFief.Mobs.Remove(mob)
 	}
 	newFief.Mobs.Add(mob)
-
 }

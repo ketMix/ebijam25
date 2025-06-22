@@ -11,11 +11,11 @@ const (
 	TerrainDesert
 	TerrainSwamp
 	TerrainSnow
+	TerrainCount // Total number of terrain types
 )
 
-func NewTerrain(sneed int) Terrain {
-	// Apply a seed to the terrain generation logic if needed.
-	return Terrain((sneed % 7) + 1) // Assuming 8 types of terrain
+func NewTerrain(seed int) Terrain {
+	return Terrain((seed % int(TerrainCount-1)) + 1)
 }
 
 func (t Terrain) GetModifier() Modifier {
@@ -53,7 +53,6 @@ func (t Terrain) GetModifier() Modifier {
 	default:
 		return Modifier{}
 	}
-
 }
 
 func (t Terrain) String() string {

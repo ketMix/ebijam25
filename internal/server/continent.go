@@ -1,8 +1,8 @@
 package server
 
-func (g *Game) UpdateContinent() {
-	for _, mob := range g.Continent.Mobs {
-		g.UpdateMob(mob)
+func (t *Table) UpdateContinent() {
+	for _, mob := range t.Continent.Mobs {
+		t.UpdateMob(mob)
 	}
 
 	/*for _, resource := range g.Resources {

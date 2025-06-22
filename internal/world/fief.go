@@ -1,12 +1,20 @@
 package world
 
+import (
+	"math"
+)
+
 type Tile struct {
 	Terrain Terrain
 }
 
+const FiefSize = 16                       // Number of tiles per fief row (e.g., 64x64)
+const FiefTiles = FiefSize * FiefSize     // Total number of tiles in a fief
+const TileSize = 32                       // Size of each tile in pixels
+const FiefPixelSpan = FiefSize * TileSize // Total pixel span of a fief
+
 type Fief struct {
-	Span      int // Size of the fief in tiles (e.g., 10x10)
-	Index     int
+	X, Y      float64
 	Name      string
 	Mobs      Mobs
 	Tiles     []Tile
@@ -14,51 +22,54 @@ type Fief struct {
 	modifiers []Modifier
 }
 
-func NewFief(fate *Fate, idx int) *Fief {
-	span := 10      // Default span for a fief, can be adjusted as needed
-	tileSpan := 128 // Default tile span in pixels, can be adjusted as needed
-	fiefSeed := fate.Eval64(float64(idx))
-	fiefFate := NewFate(int64(fiefSeed))
-
-	tiles := make([]Tile, span*span)
-
-	for i := range span {
-		for j := range span {
-			idx := i + j*span
-			tiles[idx] = Tile{
-				Terrain: NewTerrain(int(fiefFate.Determine(float64(i), float64(j)))),
-			}
+func NewFief(fate *Fate, x, y int) *Fief {
+	tiles := make([]Tile, FiefTiles)
+	idx := x + y*FiefSize
+	for i := range tiles {
+		seed := fate.Determine(float64(idx+i)) * 10000
+		tiles[i] = Tile{
+			Terrain: NewTerrain(int(math.Abs(seed))),
 		}
 	}
 
 	return &Fief{
+		X:         float64(x * FiefPixelSpan),
+		Y:         float64(y * FiefPixelSpan),
 		Name:      "Fief",
-		Span:      span,
-		Index:     idx,
 		Mobs:      Mobs{},
 		Tiles:     tiles,
-		TileSpan:  tileSpan,
 		modifiers: []Modifier{},
 	}
 }
 
-func (f *Fief) GetTileAt(x, y int) *Tile {
-	if x < 0 || y < 0 || x >= len(f.Tiles) || y >= len(f.Tiles) {
-		return nil // Out of bounds
+func (f *Fief) GetTileAt(x, y float64) *Tile {
+	if f == nil || len(f.Tiles) == 0 {
+		return nil
 	}
-	idx := x + y*len(f.Tiles)
-	if idx < 0 || idx >= len(f.Tiles) {
-		return nil // Out of bounds
+	if x < f.X || y < f.Y {
+		return nil
 	}
-	return &f.Tiles[idx]
+	if x >= f.X+float64(FiefPixelSpan) || y >= f.Y+float64(FiefPixelSpan) {
+		return nil
+	}
+
+	tileX := int((x - f.X) / TileSize)
+	tileY := int((y - f.Y) / TileSize)
+	if tileX < 0 || tileY < 0 || tileX >= FiefSize || tileY >= FiefSize {
+		return nil
+	}
+	tileIndex := tileX + tileY*FiefSize
+	if tileIndex < 0 || tileIndex >= len(f.Tiles) {
+		return nil
+	}
+	return &f.Tiles[tileIndex]
 }
 
 func (f *Fief) GetModifiers(mob *Mob) []Modifier {
 	if mob == nil {
 		return f.modifiers
 	}
-
-	tile := f.GetTileAt(int(mob.X), int(mob.Y))
+	tile := f.GetTileAt(mob.X, mob.Y)
 	if tile != nil {
 		modifiers := make([]Modifier, 0, len(f.modifiers)+1)
 		copy(modifiers, f.modifiers)
