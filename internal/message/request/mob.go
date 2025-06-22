@@ -45,9 +45,19 @@ func (c Construct) Type() string {
 	return "request-construct"
 }
 
+type TechUse struct {
+	Tech string `json:"tech"` // Name of the technology to use (e.g., "archery", "fishing")
+}
+
+// Type returns the type of the TechUse request.
+func (t TechUse) Type() string {
+	return "request-tech-use"
+}
+
 func init() {
 	message.Register(&Split{})
 	message.Register(&Move{})
 	message.Register(&Formation{})
 	message.Register(&Construct{})
+	message.Register(&TechUse{})
 }

@@ -177,16 +177,14 @@ func (g *Game) Update() error {
 		case ebiten.KeyD, ebiten.KeyRight:
 			x += 1
 		case ebiten.KeyShift:
-			mult = 5.0 // Speed up camera movement with shift.
+			mult = 5.0
 		}
 	}
 
 	if x != 0 || y != 0 {
-		// Move the camera based on the pressed keys.
 		g.cameraX += float64(x) * mult
 		g.cameraY += float64(y) * mult
 	}
-	// Update the thingz.
 	g.EventBus.ProcessEvents()
 
 	/*for _, mob := range g.Mobs {

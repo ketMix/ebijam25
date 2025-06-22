@@ -1,58 +1,50 @@
 package world
 
 import (
-	"image/color"
-
-	"github.com/hajimehoshi/ebiten/v2"
+	"math"
 )
 
-type Fief struct {
-	Mobs Mobs
-	Img  *ebiten.Image
-}
-
-func NewFief(sneed int, size int) *Fief {
-	// Determine fief render based on seed.
-	img := ebiten.NewImage(size, size)
-	randomColor := func() color.Color {
-		return color.RGBA{
-			R: uint8((sneed*31 + 17) % 256),
-			G: uint8((sneed*37 + 29) % 256),
-			B: uint8((sneed*41 + 43) % 256),
-			A: 50,
-		}
-	}
-	img.Fill(randomColor())
-	return &Fief{
-		Mobs: Mobs{},
-		Img:  img,
-	}
+type ContinentSpec struct {
+	Fiefs         int // Number of fiefs per row (e.g., 10 for a 10x10 grid)
+	Tiles         int // Number of tiles per fief row(e.g., 10x10)
+	TileSize      int // Size of each tile in pixels (e.g., 128)
+	FiefPixelSpan int // Size of each fief in pixels, calculated as Tiles * TileSize
+	PixelSpan     int // Total pixel span of the continent, calculated as Fiefs * FiefPixelSpan
 }
 
 type Continent struct {
-	Sneed    int
-	span     int
-	FiefSize int
-	Fiefs    [][]*Fief
-	Mobs     Mobs
+	Sneed int64
+	Fiefs []*Fief
+	Mobs  Mobs
+	Fate  Fate
+	Specs ContinentSpec
 }
 
-func NewContinent(sneed int) *Continent {
-	span := 10     // Default span
-	fiefSize := 64 // Default fief size
-
-	fiefs := make([][]*Fief, span)
-	for i := range fiefs {
-		fiefs[i] = make([]*Fief, span)
-		for j := range fiefs[i] {
-			fiefs[i][j] = NewFief(sneed+i+j, fiefSize)
-		}
+func NewContinent(sneed int64) *Continent {
+	specs := ContinentSpec{
+		Fiefs:    10,  // Default number of fiefs per row
+		Tiles:    128, // Default number of tiles per fief row
+		TileSize: 64,  // Default size of each tile in pixels
 	}
+	specs.FiefPixelSpan = specs.Tiles * specs.TileSize  // Size of each fief in pixels
+	specs.PixelSpan = specs.Fiefs * specs.FiefPixelSpan // Total pixel span of the continent
+	totalFiefs := specs.Fiefs * specs.Fiefs             // Total number of fiefs in the continent
+
+	// Initialize the continent with the given seed and specifications
+	fate := NewFate(sneed)
+	fiefs := make([]*Fief, totalFiefs)
+	for i := range totalFiefs {
+		fiefs[i] = NewFief(&fate, i)
+	}
+	if len(fiefs) == 0 || fiefs[0] == nil {
+		panic("failed to create continent: no fiefs generated")
+	}
+
 	return &Continent{
-		Sneed:    sneed,
-		span:     span,
-		Fiefs:    fiefs,
-		FiefSize: fiefSize,
+		Sneed: sneed,
+		Fate:  fate,
+		Fiefs: fiefs,
+		Specs: specs,
 	}
 }
 
@@ -70,21 +62,26 @@ func (c *Continent) NewMob(owner ID, id ID, x, y float64) *Mob {
 	return mob
 }
 
-func (c *Continent) isOOB(x, y float64) bool {
-	return x < 0 || y < 0 || x >= float64(len(c.Fiefs)*c.FiefSize) || y >= float64(len(c.Fiefs[0])*c.FiefSize)
+func (c *Continent) GetFiefAt(x, y int) *Fief {
+	// Determine 1-d idx based on x and y coordinates
+	if x < 0 || y < 0 || x >= c.Specs.Fiefs || y >= c.Specs.Fiefs {
+		// Abso-lute-ly out of bounds
+		return nil
+	}
+
+	idx := x + y*c.Specs.Fiefs
+	if idx < 0 || idx >= len(c.Fiefs) {
+		// Fief-ly out of bounds
+		return nil
+	}
+	return c.Fiefs[idx]
 }
 
 func (c *Continent) GetContainingFief(x, y float64) *Fief {
-	if c.isOOB(x, y) {
-		return nil // Out of bounds
-	}
-
-	fiefX := int(x / float64(c.FiefSize))
-	fiefY := int(y / float64(c.FiefSize))
-	if fiefX < 0 || fiefY < 0 || fiefX >= len(c.Fiefs) || fiefY >= len(c.Fiefs[0]) {
-		return nil // Out of bounds
-	}
-	return c.Fiefs[fiefX][fiefY]
+	// Translate pixel coordinates to fief grid coordinates
+	fiefX := int(math.Floor(x / float64(c.Specs.TileSize)))
+	fiefY := int(math.Floor(y / float64(c.Specs.TileSize)))
+	return c.GetFiefAt(int(fiefX), int(fiefY))
 }
 
 func (c *Continent) GetVisibleFiefs(mob *Mob) []*Fief {
@@ -93,20 +90,21 @@ func (c *Continent) GetVisibleFiefs(mob *Mob) []*Fief {
 	}
 
 	// Slice the fief grid based on the mob's vision radius
+	fiefPixelSpan := float64(c.Specs.FiefPixelSpan)
 	visionRadius := mob.Vision()
-	minX := min(int(mob.X-visionRadius)/c.FiefSize, 0)
-	minY := min(int(mob.Y-visionRadius)/c.FiefSize, 0)
-	maxX := max(int(mob.X+visionRadius)/c.FiefSize, len(c.Fiefs)-1)
-	maxY := max(int(mob.Y+visionRadius)/c.FiefSize, len(c.Fiefs[0])-1)
-	visibleFiefs := []*Fief{}
+	minX := max(math.Floor((mob.X-visionRadius)/fiefPixelSpan), 0)
+	minY := max(math.Floor((mob.Y-visionRadius)/fiefPixelSpan), 0)
+	maxX := min(math.Ceil((mob.X+visionRadius)/fiefPixelSpan), float64(c.Specs.Fiefs-1))
+	maxY := min(math.Ceil((mob.Y+visionRadius)/fiefPixelSpan), float64(c.Specs.Fiefs-1))
 
+	visibleFiefs := []*Fief{}
 	for x := minX; x <= maxX; x++ {
 		for y := minY; y <= maxY; y++ {
-			fief := c.Fiefs[x][y]
+			fief := c.GetFiefAt(int(x), int(y))
 			if fief != nil {
 				if CircleIntersectsBox(mob.X, mob.Y, mob.Vision(),
-					float64(x*c.FiefSize), float64(y*c.FiefSize),
-					float64(c.FiefSize), float64(c.FiefSize)) {
+					x*fiefPixelSpan, y*fiefPixelSpan,
+					fiefPixelSpan, fiefPixelSpan) {
 					visibleFiefs = append(visibleFiefs, fief)
 				}
 			}
@@ -158,9 +156,8 @@ func (c *Continent) MoveMob(mob *Mob, x, y float64) {
 		return
 	}
 
-	maxSize := len(c.Fiefs) * c.FiefSize
-	newX := clamp(x, 0, float64(maxSize))
-	newY := clamp(y, 0, float64(maxSize))
+	newX := clamp64(x, 0, float64(c.Specs.PixelSpan))
+	newY := clamp64(y, 0, float64(c.Specs.PixelSpan))
 
 	currentFief := c.GetContainingFief(mob.X, mob.Y)
 	mob.X = newX

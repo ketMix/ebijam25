@@ -5,53 +5,80 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/ketMix/ebijam25/internal/world"
 )
 
+var continentImage *ebiten.Image
+
+func DrawTile(screen *ebiten.Image, t world.Terrain, x, y, size float32) {
+	if t == world.TerrainNone {
+		return
+	}
+
+	c := color.RGBA{128, 128, 128, 255} // Default color for unknown terrain
+	switch t {
+	case world.TerrainGrass:
+		c = color.RGBA{34, 139, 34, 255}
+	case world.TerrainWater:
+		c = color.RGBA{0, 0, 255, 150}
+	case world.TerrainMountain:
+		c = color.RGBA{139, 137, 137, 255}
+	case world.TerrainForest:
+		c = color.RGBA{34, 139, 34, 255}
+	case world.TerrainDesert:
+		c = color.RGBA{210, 180, 140, 255}
+	case world.TerrainSwamp:
+		c = color.RGBA{85, 107, 47, 255}
+	case world.TerrainSnow:
+		c = color.RGBA{255, 250, 250, 255}
+	default:
+		break
+	}
+	fmt.Println("Drawing tile at", x, y, "with size", size, "and color", c)
+	vector.DrawFilledRect(screen, x, y, size, size, c, true)
+}
+
+func (g *Game) DrawFiefs(screen *ebiten.Image) {
+	fiefs := g.Continent.Fiefs
+	if fiefs == nil || len(fiefs) == 0 {
+		g.log.Error("no fiefs to draw")
+		return
+	}
+
+	for _, fief := range fiefs {
+		if fief == nil {
+			continue
+		}
+
+		fiefMinX := fief.Index % g.Continent.Specs.Fiefs
+		fiefMinY := fief.Index / g.Continent.Specs.Fiefs
+		tileSize := float32(fief.TileSpan)
+		for x := range fief.Span {
+			for y := range fief.Span {
+				tile := fief.GetTileAt(x, y)
+				if tile != nil {
+					tileX := float32(fiefMinX*fief.TileSpan + x*fief.TileSpan)
+					tileY := float32(fiefMinY*fief.TileSpan + y*fief.TileSpan)
+					DrawTile(screen, tile.Terrain, tileX, tileY, tileSize)
+				}
+			}
+		}
+	}
+
+}
 func (g *Game) DrawContinent(screen *ebiten.Image) {
 	if g.Continent == nil || g.Continent.Fiefs == nil {
 		return
 	}
+	if continentImage == nil {
+		pix := int(g.Continent.Specs.PixelSpan)
+		continentImage = ebiten.NewImage(pix, pix)
+		g.DrawFiefs(continentImage)
+	}
 	ops := &ebiten.DrawImageOptions{}
-
-	for x, row := range g.Continent.Fiefs {
-		for y, fief := range row {
-			if fief == nil {
-				continue
-			}
-
-			ops.GeoM.Reset()
-			ops.GeoM.Translate(float64(x*g.Continent.FiefSize), float64(y*g.Continent.FiefSize))
-			if g.Debug {
-				borderSize := float32(g.Continent.FiefSize / 10)
-				vector.DrawFilledRect(screen,
-					float32(x*g.Continent.FiefSize),
-					float32(y*g.Continent.FiefSize),
-					float32(g.Continent.FiefSize),
-					float32(g.Continent.FiefSize),
-					color.White,
-					true,
-				)
-				vector.DrawFilledRect(screen,
-					float32(x*g.Continent.FiefSize)-borderSize,
-					float32(y*g.Continent.FiefSize)-borderSize,
-					float32(g.Continent.FiefSize)+2*borderSize,
-					float32(g.Continent.FiefSize)+2*borderSize,
-					color.Gray{},
-					true,
-				)
-
-				ebitenutil.DebugPrintAt(screen,
-					fmt.Sprintf("(%d,%d)\nMobs: %d", x, y, len(fief.Mobs)),
-					x*g.Continent.FiefSize+2, y*g.Continent.FiefSize+2)
-			} else if fief.Img != nil {
-				screen.DrawImage(fief.Img, ops)
-			}
-
-			for _, mob := range fief.Mobs {
-				g.DrawMob(screen, mob)
-			}
-		}
+	screen.DrawImage(continentImage, ops)
+	for _, mob := range g.Continent.Mobs {
+		g.DrawMob(screen, mob)
 	}
 }

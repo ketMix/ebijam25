@@ -2,7 +2,7 @@ package server
 
 import (
 	"log/slog"
-	"math/rand"
+	"math/rand/v2"
 	"slices"
 
 	"github.com/ketMix/ebijam25/internal/log"
@@ -33,8 +33,7 @@ type Game struct {
 // Setup sets up event subscriptions.
 func (g *Game) Setup() {
 	g.log = log.New("game", "server")
-	seed := rand.Intn(1000000)                   // Random seed for world generation
-	g.State.Continent = world.NewContinent(seed) // Create a new continent with the seed and dimensions
+	g.State.Continent = world.NewContinent(rand.Int64()) // Create a new continent with the seed and dimensions
 	g.State.Tickrate = 5
 	g.EventBus = *event.NewBus("server")
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {

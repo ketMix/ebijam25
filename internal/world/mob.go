@@ -65,6 +65,7 @@ type Mob struct {
 	TargetX, TargetY float64 // Target position to move to
 	TargetID         ID
 	Constituents     []Constituent
+	Stats            *Stats // Stats of the mob
 }
 
 // Update does Mob logic, woo
