@@ -8,7 +8,7 @@ type Tile struct {
 	Terrain Terrain
 }
 
-const FiefSize = 16                       // Number of tiles per fief row (e.g., 64x64)
+const FiefSize = 32                       // Number of tiles per fief row (e.g., 64x64)
 const FiefTiles = FiefSize * FiefSize     // Total number of tiles in a fief
 const TileSize = 32                       // Size of each tile in pixels
 const FiefPixelSpan = FiefSize * TileSize // Total pixel span of a fief
@@ -18,7 +18,6 @@ type Fief struct {
 	Name      string
 	Mobs      Mobs
 	Tiles     []Tile
-	TileSpan  int // Span of each tile in pixels, can be used for rendering
 	modifiers []Modifier
 }
 
@@ -26,7 +25,7 @@ func NewFief(fate *Fate, x, y int) *Fief {
 	tiles := make([]Tile, FiefTiles)
 	idx := x + y*FiefSize
 	for i := range tiles {
-		seed := fate.Determine(float64(idx+i)) * 10000
+		seed := fate.Determine(float64(idx*i+i)) * 10000
 		tiles[i] = Tile{
 			Terrain: NewTerrain(int(math.Abs(seed))),
 		}

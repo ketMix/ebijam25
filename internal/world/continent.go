@@ -76,8 +76,8 @@ func (c *Continent) GetFiefAt(x, y int) *Fief {
 
 func (c *Continent) GetContainingFief(x, y float64) *Fief {
 	// Translate pixel coordinates to fief grid coordinates
-	fiefX := int(math.Floor(x / float64(FiefPixelSpan)))
-	fiefY := int(math.Floor(y / float64(FiefPixelSpan)))
+	fiefX := int(math.Floor(x / float64(ContinentPixelSpan)))
+	fiefY := int(math.Floor(y / float64(ContinentPixelSpan)))
 	return c.GetFiefAt(fiefX, fiefY)
 }
 

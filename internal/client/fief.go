@@ -2,63 +2,21 @@ package client
 
 import (
 	"fmt"
-	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/ketMix/ebijam25/internal/world"
 )
 
 func DrawTile(screen *ebiten.Image, t world.Terrain, x, y, size float32) {
-	if t == world.TerrainNone {
+	if screen == nil || t == world.TerrainNone {
 		return
 	}
-
-	var a uint8 = 100
-	c := color.NRGBA{128, 128, 128, 255} // Default color for unknown terrain
-	switch t {
-	case world.TerrainGrass:
-		c = color.NRGBA{34, 139, 34, 255}
-	case world.TerrainWater:
-		c = color.NRGBA{0, 0, 255, 255}
-	case world.TerrainMountain:
-		c = color.NRGBA{139, 137, 137, 255}
-	case world.TerrainForest:
-		c = color.NRGBA{34, 139, 34, 255}
-	case world.TerrainDesert:
-		c = color.NRGBA{210, 180, 140, 255}
-	case world.TerrainSwamp:
-		c = color.NRGBA{85, 107, 47, 255}
-	case world.TerrainSnow:
-		c = color.NRGBA{255, 250, 250, 255}
-	default:
-		break
-	}
-	c.A = a
-	vector.DrawFilledRect(screen, x, y, size, size, c, true)
+	opts := &ebiten.DrawImageOptions{}
+	opts.GeoM.Translate(float64(x), float64(y))
+	opts.GeoM.Scale(float64(size)/float64(world.TileSize), float64(size)/float64(world.TileSize))
+	DrawTerrain(screen, opts, t)
 }
-
-// func (g *Game) MakeFiefImages(sneed int64) {
-// 	fiefNum := world.ContinientFiefSpan * world.ContinientFiefSpan
-// 	fiefs := make([]*ebiten.Image, fiefNum)
-
-// 	for i := range fiefNum {
-// 		img := ebiten.NewImage(world.FiefSize, world.FiefSize)
-// 		fsneed := int(sneed) + i
-// 		randomColor := func() color.Color {
-// 			return color.NRGBA{
-// 				R: uint8((fsneed*31 + 17) % 256),
-// 				G: uint8((fsneed*37 + 29) % 256),
-// 				B: uint8((fsneed*41 + 43) % 256),
-// 				A: 50,
-// 			}
-// 		}
-// 		img.Fill(randomColor())
-// 		fiefs[i] = img
-// 	}
-// 	g.fiefImages = fiefs
-// }
 
 func (g *Game) DrawFiefs(screen *ebiten.Image) {
 	if screen == nil {

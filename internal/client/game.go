@@ -30,6 +30,7 @@ func (g *Game) Setup() {
 	g.debug.Setup()
 	g.cammie.Setup()
 	g.EventBus = *event.NewBus("client")
+	g.continentImage = ebiten.NewImage(world.ContinentPixelSpan, world.ContinentPixelSpan)
 
 	// **** Event -> local state change hooks.
 	g.EventBus.Subscribe((event.MetaJoin{}).Type(), func(e event.Event) {
@@ -123,6 +124,16 @@ func (g *Game) Update() error {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 		g.cammie.ToggleLocked()
+		if g.cammie.Locked() {
+			player := g.Continent.Mobs.FindByID(g.MobID)
+			if player == nil {
+				g.log.Error("camera lock failed: player not found", "mobID", g.MobID)
+			} else {
+				// If the camera is locked, center it on the player.
+				g.cammie.SetPosition(player.X, player.Y)
+			}
+		}
+
 		g.log.Info("camera lock toggled", "enabled: ", g.cammie.Locked())
 	}
 
@@ -235,10 +246,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(ow, oh int) (int, int) {
-	// Return the original dimensions for now.
-	if g.continentImage == nil || (g.continentImage.Bounds().Dx() != ow || g.continentImage.Bounds().Dy() != oh) {
-		g.continentImage = ebiten.NewImage(ow, oh)
-	}
 	// Refresh the camera's image as necessary.
 	g.cammie.Layout(ow, oh)
 	return ow, oh
