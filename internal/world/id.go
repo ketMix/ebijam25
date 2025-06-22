@@ -31,12 +31,22 @@ func (gen *IDGenerator) Reset() {
 /*
 9-bit family ID (511)
 10-bit constituents ID (1023)
-3-bit mob ID (7)
+3-bit kind ID (7)
 5-bit item ID (31)
 5-bit level (31)
 */
 
 type SchlubID int
+
+const (
+	SchlubKindVagrant SchlubID = iota
+	SchlubKindMonk
+	SchlubKindWarrior
+	SchlubKindHolyPerson
+	SchlubKindGreatLeader
+	SchlubKindBuilding
+	SchlubKindMobile
+)
 
 func (s SchlubID) String() string {
 	return fmt.Sprintf("family: %d, schlub %d, kind: %d, item: %d, bits: %s",
