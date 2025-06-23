@@ -13,6 +13,7 @@ const (
 	TerrainRockyDirt
 	TerrainSand
 	TerrainWater
+	TerrainPines
 	// TerrainMountain
 	// TerrainForest
 	// TerrainDesert
@@ -40,11 +41,11 @@ func (t Terrain) GetModifier() Modifier {
 	// 		Reason: "Each new footing takes immense concentration",
 	// 		Stats:  Stats{Agility: -5},
 	// 	}
-	// case TerrainForest:
-	// 	return Modifier{
-	// 		Reason: "You thought you saw a little leprechaun man out of the corner of your eye...",
-	// 		Stats:  Stats{Luck: 1},
-	// 	}
+	case TerrainPines:
+		return Modifier{
+			Reason: "You thought you saw a little leprechaun man out of the corner of your eye...",
+			Stats:  Stats{Luck: 1},
+		}
 	// case TerrainDesert:
 	// 	return Modifier{
 	// 		Reason: "The heat is unbearable, you feel like you're melting",
@@ -79,6 +80,8 @@ func (t Terrain) ImageName() string {
 		return "sand"
 	case TerrainWater:
 		return "water"
+	case TerrainPines:
+		return "pines"
 	default:
 		return "dirt"
 	}
@@ -97,6 +100,8 @@ func (t Terrain) String() string {
 		return "Sand"
 	case TerrainWater:
 		return "Water"
+	case TerrainPines:
+		return "Pines"
 	default:
 		return "Unknown"
 	}
@@ -163,7 +168,10 @@ func getTerrain(elevation, temperature, moisture float64) Terrain {
 		return TerrainSand
 	}
 
-	if moisture > 0.5 {
+	if moisture > 0.6 {
+		return TerrainPines
+	}
+	if moisture > 0.4 {
 		return TerrainGrass
 	}
 	return TerrainDirt
