@@ -1,16 +1,7 @@
 package world
 
-import (
-	"math"
-)
-
-type Tile struct {
-	Terrain Terrain
-}
-
 const FiefSize = 32                       // Number of tiles per fief row (e.g., 64x64)
 const FiefTiles = FiefSize * FiefSize     // Total number of tiles in a fief
-const TileSize = 32                       // Size of each tile in pixels
 const FiefPixelSpan = FiefSize * TileSize // Total pixel span of a fief
 
 type Fief struct {
@@ -23,17 +14,19 @@ type Fief struct {
 
 func NewFief(fate *Fate, x, y int) *Fief {
 	tiles := make([]Tile, FiefTiles)
-	idx := x + y*FiefSize
+	fiefX := float64(x * FiefPixelSpan)
+	fiefY := float64(y * FiefPixelSpan)
 	for i := range tiles {
-		seed := fate.Determine(float64(idx*i+i)) * 10000
-		tiles[i] = Tile{
-			Terrain: NewTerrain(int(math.Abs(seed))),
-		}
+		tX := i % FiefSize
+		tY := i / FiefSize
+		tileX := float64(tX*TileSize) + fiefX
+		tileY := float64(tY*TileSize) + fiefY + float64(TileSize)
+		tiles[i] = NewTile(fate, tileX, tileY)
 	}
 
 	return &Fief{
-		X:         float64(x * FiefPixelSpan),
-		Y:         float64(y * FiefPixelSpan),
+		X:         fiefX,
+		Y:         fiefY,
 		Name:      "Fief",
 		Mobs:      Mobs{},
 		Tiles:     tiles,

@@ -41,3 +41,11 @@ func LoadImages() error {
 
 	return nil
 }
+
+// GetImage do be getting an image by name, tho.
+func GetImage(name string) *ebiten.Image {
+	if img, ok := Images[name]; ok {
+		return img
+	}
+	return nil
+}

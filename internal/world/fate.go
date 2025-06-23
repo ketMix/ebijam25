@@ -19,7 +19,7 @@ func NewFate(sneed uint) Fate {
 
 	return Fate{
 		Generator: generator,
-		certainty: 0.5, // Default smoothness
+		certainty: 200,
 	}
 }
 
