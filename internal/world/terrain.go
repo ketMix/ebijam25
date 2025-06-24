@@ -113,16 +113,14 @@ func getElevation(fate *Fate, x, y float64) float64 {
 	frequency := 1.0
 	maxValue := 0.0
 
-	for range 6 {
-		value += fate.Determine(
-			x,
-			y*frequency,
-		) * amplitude
+	value += fate.Determine(
+		x,
+		y*frequency,
+	) * amplitude
 
-		maxValue += amplitude
-		amplitude *= 0.5
-		frequency *= 2.0
-	}
+	maxValue += amplitude
+	amplitude *= 0.5
+	frequency *= 2.0
 
 	value = (value/maxValue + 1) / 2
 	value = math.Pow(value, 1.5)
@@ -147,30 +145,27 @@ func getMoisture(fate *Fate, x, y float64) float64 {
 }
 
 func getTerrain(elevation, temperature, moisture float64) Terrain {
-	if elevation < 0.15 {
+	if elevation < 0.05 {
 		return TerrainWater
 	}
-	if elevation < 0.2 {
+	if elevation < 0.10 {
 		return TerrainSand
 	}
 
-	if elevation > 0.7 {
+	if elevation > 0.9 {
 		return TerrainRockyDirt
 	}
 
-	if temperature > 0.6 {
+	if temperature > 0.8 {
 		if moisture < 0.3 {
 			return TerrainSand
 		}
 		if moisture < 0.5 {
 			return TerrainRockyDirt
 		}
-		return TerrainSand
+		return TerrainDirt
 	}
 
-	if moisture > 0.6 {
-		return TerrainPines
-	}
 	if moisture > 0.4 {
 		return TerrainGrass
 	}

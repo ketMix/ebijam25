@@ -1,6 +1,6 @@
 package world
 
-const TileSize = 4 // Size of each tile in pixels
+const TileSize = 16 // Size of each tile in pixels
 
 type Tile struct {
 	Terrain Terrain
