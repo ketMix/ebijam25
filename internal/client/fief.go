@@ -61,9 +61,6 @@ func (g *Game) DrawFiefs(screen *ebiten.Image) {
 			x := (idx % world.ContinientFiefSpan) * world.FiefPixelSpan
 			y := (idx / world.ContinientFiefSpan) * world.FiefPixelSpan
 			ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Fief %d", idx), x+2, y+2)
-			for _, mob := range fief.Mobs {
-				g.DrawMob(screen, mob)
-			}
 		}
 	} else {
 		for idx, fief := range fiefs {
@@ -74,10 +71,15 @@ func (g *Game) DrawFiefs(screen *ebiten.Image) {
 			ops := &ebiten.DrawImageOptions{}
 			ops.GeoM.Translate(float64(fief.X), float64(fief.Y))
 			screen.DrawImage(fiefImages[idx], ops)
-			for _, mob := range fief.Mobs {
-				g.DrawMob(screen, mob)
-			}
 		}
+	}
+
+	for _, mob := range g.Continent.Mobs {
+		if mob == nil {
+			g.log.Warn("nil mob found in continent mobs")
+			continue
+		}
+		g.DrawMob(screen, mob)
 	}
 
 }
