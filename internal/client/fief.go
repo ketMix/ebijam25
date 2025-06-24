@@ -15,6 +15,7 @@ func DrawTile(screen *ebiten.Image, t world.Terrain, x, y, size float32) {
 	opts := &ebiten.DrawImageOptions{}
 	opts.GeoM.Translate(float64(x), float64(y))
 	opts.GeoM.Scale(float64(size)/float64(world.TileSize), float64(size)/float64(world.TileSize))
+	opts.ColorScale.ScaleAlpha(0.85)
 	DrawTerrain(screen, opts, t)
 }
 

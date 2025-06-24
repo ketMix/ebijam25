@@ -27,6 +27,5 @@ func DrawTerrain(screen *ebiten.Image, opts *ebiten.DrawImageOptions, terrain wo
 		}
 		terrainCache[terrain] = img
 	}
-	opts.ColorScale.ScaleAlpha(0.85)
 	screen.DrawImage(img, opts)
 }
