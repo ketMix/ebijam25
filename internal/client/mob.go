@@ -15,14 +15,25 @@ func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob) {
 	if mob == nil {
 		return
 	}
-	radius := mob.Radius()
-	vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), 5, color.NRGBA{255, 0, 255, 255}, true)
-	countText := fmt.Sprintf("%d", len(mob.Schlubs))
-	ebitenutil.DebugPrintAt(screen, countText, int(mob.X), int(mob.Y))
-	// Draw vision circle for local player.
-	if mob.ID == g.MobID {
-		vision := mob.Vision()
-		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 5, color.NRGBA{0, 255, 0, 64}, false)
+
+	// Get particle system for this mob
+	ps, exists := g.schlubSystem[mob.ID]
+	if exists && ps != nil {
+		// Draw particles with fluid effect
+		ps.Draw(screen)
+	} else {
+		// Fallback to simple circle if no particle system
+		radius := mob.Radius()
+		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), 2, color.NRGBA{255, 0, 255, 128}, true)
 	}
 
+	// Draw schlub count
+	countText := fmt.Sprintf("%d", len(mob.Schlubs))
+	ebitenutil.DebugPrintAt(screen, countText, int(mob.X)-10, int(mob.Y)-5)
+
+	// Draw vision circle for local player
+	if mob.ID == g.MobID {
+		vision := mob.Vision()
+		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 1, color.NRGBA{0, 255, 0, 32}, false)
+	}
 }

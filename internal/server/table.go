@@ -63,11 +63,14 @@ func (t *Table) Loop() {
 			// Create a new mob for the player.
 			mob := t.Continent.NewMob(player.ID, t.mobID.Next(), world.ContinentPixelSpan/2, world.ContinentPixelSpan/2)
 			player.MobID = mob.ID // Assign the mob ID to the player
-			// Add a single schlub.
+
+			// Add a some schlubs.
 			fam := t.FamilyID.NextFamily()
 			t.FamilyID = fam
-			fam = fam.NextSchlub()
-			mob.AddSchlub(fam)
+			for range 1000 {
+				fam = fam.NextSchlub()
+				mob.AddSchlub(fam)
+			}
 
 			welcome, _ := message.Encode(&event.MetaWelcome{
 				Username: player.Username,

@@ -1,6 +1,6 @@
 package world
 
-const FiefSize = 32                       // Number of tiles per fief row (e.g., 64x64)
+const FiefSize = 16                       // Number of tiles per fief row (e.g., 64x64)
 const FiefTiles = FiefSize * FiefSize     // Total number of tiles in a fief
 const FiefPixelSpan = FiefSize * TileSize // Total pixel span of a fief
 

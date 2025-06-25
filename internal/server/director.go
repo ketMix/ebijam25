@@ -53,9 +53,8 @@ func (d *Director) GetSpawnPosition() (float64, float64) {
 	return rand.Float64() * world.ContinentPixelSpan, rand.Float64() * world.ContinentPixelSpan
 }
 func (d *Director) AddMobs() {
-
 	t := d.table
-	mobSchlubCount := int(rand.Float64() * MaxSchlubsToSpawn)
+	mobSchlubCount := int(rand.Float64()*MaxSchlubsToSpawn) + 1
 	posX, posY := d.GetSpawnPosition()
 
 	fam := t.FamilyID.NextFamily()

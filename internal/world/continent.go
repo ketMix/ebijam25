@@ -161,6 +161,18 @@ func (c *Continent) MoveMob(mob *Mob, x, y float64) {
 		return
 	}
 
+	fiefs := c.GetVisibleFiefs(mob)
+	for _, fief := range fiefs {
+		for mobInFief := range fief.Mobs {
+			if mobInFief != mob.ID && mob.Intersects(c.Mobs.FindByID(mobInFief)) {
+				// If the mob intersects with another mob in the same fief, do not move
+				mob.TargetX = mob.X
+				mob.TargetY = mob.Y
+				return
+			}
+		}
+	}
+
 	newX := clamp64(x, 0, float64(ContinentPixelSpan))
 	newY := clamp64(y, 0, float64(ContinentPixelSpan))
 	newFief := c.GetContainingFief(newX, newY)

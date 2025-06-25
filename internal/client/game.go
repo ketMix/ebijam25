@@ -22,6 +22,9 @@ type Game struct {
 	fiefImages     []*ebiten.Image
 	cammie         Cammie
 	Debug          bool
+	schlubSystem   map[world.ID]*Schlubs
+	particleShader *ebiten.Shader
+	metaballShader *ebiten.Shader
 }
 
 // Setup sets up our event and request hooks.
@@ -61,6 +64,7 @@ func (g *Game) Setup() {
 
 		mob := g.Continent.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
 		mob.AddSchlub(schlubs...)
+		g.schlubSystem[mob.ID] = NewSchlubSystem(mob)
 
 		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y, "schlubs", len(schlubs))
 		if mob.ID == g.MobID {
@@ -74,6 +78,8 @@ func (g *Game) Setup() {
 		evt := e.(*event.MobDespawn)
 		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
 			g.Continent.RemoveMob(mob)
+			// Remove particle system
+			delete(g.schlubSystem, mob.ID)
 			g.log.Debug("mob despawned", "id", evt.ID)
 		} else {
 			g.log.Warn("mob despawned but not found", "id", evt.ID)
@@ -107,6 +113,9 @@ func (g *Game) Setup() {
 	g.EventBus.Subscribe((request.Construct{}).Type(), func(e event.Event) {
 		g.log.Debug("construct request sent", "event", e)
 	})
+
+	// Initialize particle systems
+	g.schlubSystem = make(map[world.ID]*Schlubs)
 }
 
 // Update updates the game state and processes events.
@@ -190,6 +199,11 @@ func (g *Game) Update() error {
 	/*for _, mob := range g.Mobs {
 		mob.Update(&g.State)
 	}*/
+
+	// Update particle systems
+	for _, ps := range g.schlubSystem {
+		ps.Update()
+	}
 	return nil
 }
 

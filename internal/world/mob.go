@@ -117,5 +117,8 @@ func (m *Mob) Vision() float64 {
 
 // Intersects checks if the mob's circle edge intersects with another mob's circle edge.
 func (m *Mob) Intersects(other *Mob) bool {
+	if other == nil {
+		return false
+	}
 	return CircleIntersectsCircle(m.X, m.Y, m.Radius(), other.X, other.Y, other.Radius())
 }
