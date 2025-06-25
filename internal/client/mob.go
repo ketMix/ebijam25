@@ -1,9 +1,11 @@
 package client
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/ketMix/ebijam25/internal/world"
 )
@@ -15,10 +17,12 @@ func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob) {
 	}
 	radius := mob.Radius()
 	vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), 5, color.NRGBA{255, 0, 255, 255}, true)
-
+	countText := fmt.Sprintf("%d", len(mob.Schlubs))
+	ebitenutil.DebugPrintAt(screen, countText, int(mob.X), int(mob.Y))
 	// Draw vision circle for local player.
 	if mob.ID == g.MobID {
 		vision := mob.Vision()
 		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 5, color.NRGBA{0, 255, 0, 64}, false)
 	}
+
 }

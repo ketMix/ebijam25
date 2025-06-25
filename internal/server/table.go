@@ -16,6 +16,7 @@ import (
 // Table is our table, dang. It's basically a full game structure.
 type Table struct {
 	world.State
+	director       *Director
 	log            *slog.Logger
 	ID             world.ID
 	open           bool
@@ -99,7 +100,7 @@ func (t *Table) Update() {
 		t.RefreshVisibleMobs(player)
 		player.bus.ProcessEvents()
 	}
-
+	t.director.Update()
 	t.UpdateContinent()
 }
 
@@ -122,6 +123,7 @@ func (t *Table) AddPlayer(player *Player) {
 			return
 		}
 	})
+
 	// It's a bit crap, but we need to spawn a new goroutine for each player.
 	go func() {
 		for {
