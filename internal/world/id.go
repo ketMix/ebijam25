@@ -33,7 +33,7 @@ func (gen *IDGenerator) Reset() {
 10-bit constituents ID (1023)
 3-bit kind ID (7)
 5-bit item ID (31)
-5-bit level (31)
+5-bit age (31)
 */
 
 type SchlubID int
@@ -48,11 +48,12 @@ const (
 )
 
 func (s SchlubID) String() string {
-	return fmt.Sprintf("family: %d, schlub %d, kind: %d, item: %d, bits: %s",
+	return fmt.Sprintf("family: %d, schlub %d, kind: %d, item: %d, age: %d, bits: %s",
 		s.FamilyID(),
 		s.SchlubID(),
 		s.KindID(),
 		s.ItemID(),
+		s.AgeID(),
 		s.BitsAsString(),
 	)
 }
@@ -125,4 +126,17 @@ func (s *SchlubID) SetItemID(item int) {
 		panic("item must be between 0 and 31")
 	}
 	*s = SchlubID((int(*s) & 0xFFFFFE1F) | (item << 4))
+}
+
+func (s SchlubID) AgeID() int {
+	// Extract the 5-bit age ID from the SchlubID
+	return int(s) & 0x1F
+}
+
+func (s *SchlubID) SetAgeID(age int) {
+	// Set the 5-bit age ID in the SchlubID
+	if age < 0 || age > 31 {
+		panic("age must be between 0 and 31")
+	}
+	*s = SchlubID((int(*s) & 0xFFFFFFE0) | (age & 0x1F))
 }
