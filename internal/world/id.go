@@ -109,8 +109,8 @@ func (s SchlubID) KindID() int {
 }
 func (s *SchlubID) SetKindID(kind int) {
 	// Set the 3-bit kind ID in the SchlubID
-	if kind < 0 || kind > 7 {
-		panic("kind must be between 0 and 7")
+	if kind < 0 || kind > 6 {
+		panic("kind must be between 0 and 6")
 	}
 	*s = SchlubID((int(*s) & 0xFFFFF1FF) | (kind << 9))
 }
