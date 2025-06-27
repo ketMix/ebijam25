@@ -19,6 +19,7 @@ type MetaWelcome struct {
 	ID       int    `json:"id"`
 	MobID    int    `json:"mobId"` // ID of the mob associated with the player
 	Seed     uint   `json:"seed"`  // Seed for this game's continent generation
+	Rate     int    `json:"rate"`  // Tick
 }
 
 // Type returns the type of the MetaWelcome event.

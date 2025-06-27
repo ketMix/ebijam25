@@ -32,7 +32,7 @@ type Table struct {
 }
 
 const (
-	debugSpawn = 100
+	debugSpawn = world.MaxSchlubsPerMob
 )
 
 // NewTable makes a new table, dang.
@@ -81,7 +81,6 @@ func (t *Table) Loop() {
 				if kindId > int(world.SchlubKindMonk) {
 					kindId = int(world.SchlubKindVagrant)
 				}
-				fmt.Println(fam)
 			}
 
 			welcome, _ := message.Encode(&event.MetaWelcome{
@@ -89,6 +88,7 @@ func (t *Table) Loop() {
 				ID:       player.ID,
 				MobID:    mob.ID,
 				Seed:     t.Seed,
+				Rate:     t.State.Tickrate,
 			})
 			player.conn.Write(ctx, websocket.MessageText, welcome)
 		case player := <-t.playerLeave:

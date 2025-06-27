@@ -17,7 +17,9 @@ func (t *Table) Setup() {
 	t.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
 		if mob := t.Continent.Mobs.FindByID(evt.ID); mob != nil {
-			t.Continent.MoveMob(mob, float64(evt.X), float64(evt.Y))
+			floatX := float64(evt.X) / world.FloatScale
+			floatY := float64(evt.Y) / world.FloatScale
+			t.Continent.MoveMob(mob, floatX, floatY)
 			// For now just send it, I guess.
 			t.SendVisibleMobEvent(mob, e)
 		}
@@ -29,8 +31,17 @@ func (t *Table) Setup() {
 		switch evt := msg.msg.(type) {
 		case *request.Move:
 			if mob := t.Continent.Mobs.FindByID(msg.player.MobID); mob != nil {
-				mob.TargetX = float64(evt.X)
-				mob.TargetY = float64(evt.Y)
+				floatX := float64(evt.X) / world.FloatScale
+				floatY := float64(evt.Y) / world.FloatScale
+				mob.TargetX = floatX
+				mob.TargetY = floatY
+				e := &event.MobMove{
+					ID:       mob.ID,
+					X:        evt.X,
+					Y:        evt.Y,
+					TargetID: mob.TargetID,
+				}
+				t.SendVisibleMobEvent(mob, e)
 			} else {
 				t.log.Warn("move request received but mob not found", "mobID", msg.player.MobID)
 			}

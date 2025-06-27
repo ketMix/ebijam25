@@ -7,6 +7,11 @@ import (
 	"github.com/ketMix/ebijam25/internal/message/event"
 )
 
+const (
+	FloatScale       float64 = 10.0
+	MaxSchlubsPerMob int     = 1000 // Max number of schlubs in a mob
+)
+
 // Mobs is a slice of mobbies, yo.
 type Mobs []*Mob
 
@@ -93,7 +98,9 @@ func (m *Mob) Update(state *State) {
 			y = m.TargetY
 		}
 
-		state.EventBus.Publish(&event.MobPosition{ID: m.ID, X: int(x), Y: int(y)})
+		intX := int(x * FloatScale)
+		intY := int(y * FloatScale)
+		state.EventBus.Publish(&event.MobPosition{ID: m.ID, X: intX, Y: intY})
 	}
 }
 

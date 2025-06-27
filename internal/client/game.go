@@ -23,8 +23,6 @@ type Game struct {
 	cammie         Cammie
 	Debug          bool
 	schlubSystem   map[world.ID]*Schlubs
-	particleShader *ebiten.Shader
-	metaballShader *ebiten.Shader
 }
 
 // Setup sets up our event and request hooks.
@@ -49,6 +47,7 @@ func (g *Game) Setup() {
 		g.PlayerID = evt.ID
 		g.MobID = evt.MobID
 		g.State.Continent = world.NewContinent(evt.Seed)
+		g.State.Tickrate = evt.Rate
 	})
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobSpawn)
@@ -88,15 +87,19 @@ func (g *Game) Setup() {
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
 		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
-			g.Continent.MoveMob(mob, float64(evt.X), float64(evt.Y))
-			g.log.Debug("mob position updated", "id", evt.ID, "x", evt.X, "y", evt.Y)
+			floatX := float64(evt.X) / world.FloatScale
+			floatY := float64(evt.Y) / world.FloatScale
+			g.Continent.MoveMob(mob, floatX, floatY)
+			g.log.Debug("mob position updated", "id", evt.ID, "x", floatX, "y", floatY)
 		}
 	})
 	g.EventBus.Subscribe((event.MobMove{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobMove)
 		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
-			mob.TargetX = float64(evt.X)
-			mob.TargetY = float64(evt.Y)
+			floatX := float64(evt.X) / world.FloatScale
+			floatY := float64(evt.Y) / world.FloatScale
+			mob.TargetX = floatX
+			mob.TargetY = floatY
 			mob.TargetID = evt.TargetID
 			g.log.Info("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
 		}
@@ -114,7 +117,6 @@ func (g *Game) Setup() {
 		g.log.Debug("construct request sent", "event", e)
 	})
 
-	// Initialize particle systems
 	g.schlubSystem = make(map[world.ID]*Schlubs)
 }
 
@@ -126,8 +128,8 @@ func (g *Game) Update() error {
 		// Convert screen coordinates to world coordinates.
 		x, y := g.cammie.ScreenToWorld(ebiten.CursorPosition())
 		g.EventBus.Publish(&request.Move{
-			X: int(x),
-			Y: int(y),
+			X: int(x * world.FloatScale),
+			Y: int(y * world.FloatScale),
 		})
 		g.log.Debug("move request sent", "x", x, "y", y)
 	}
@@ -200,9 +202,9 @@ func (g *Game) Update() error {
 		mob.Update(&g.State)
 	}*/
 
-	// Update particle systems
+	// Update schlubs
 	for _, ps := range g.schlubSystem {
-		ps.Update()
+		ps.Update(float64(g.State.Tickrate))
 	}
 	return nil
 }

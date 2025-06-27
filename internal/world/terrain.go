@@ -38,12 +38,11 @@ func (t Terrain) ImageName() string {
 		return "sand"
 	case TerrainWater:
 		return "water"
-	case TerrainPines:
-		return "pines"
 	default:
 		return "dirt"
 	}
 }
+
 func (t Terrain) String() string {
 	switch t {
 	case TerrainNone:
