@@ -71,7 +71,7 @@ func (d *Director) Update() {
 	d.timers.resourceTimer++
 
 	if d.timers.mobTimer >= MobTick {
-		d.AddMobs()
+		// d.AddMobs()
 		d.timers.mobTimer = 0
 	}
 

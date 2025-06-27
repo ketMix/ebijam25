@@ -31,6 +31,10 @@ type Table struct {
 	close          chan bool // Channel to signal table closure
 }
 
+const (
+	debugSpawn = 100
+)
+
 // NewTable makes a new table, dang.
 func NewTable(id world.ID) *Table {
 	return &Table{
@@ -67,9 +71,17 @@ func (t *Table) Loop() {
 			// Add a some schlubs.
 			fam := t.FamilyID.NextFamily()
 			t.FamilyID = fam
-			for range 1000 {
+
+			kindId := int(world.SchlubKindVagrant)
+			for range debugSpawn {
 				fam = fam.NextSchlub()
+				fam.SetKindID(kindId)
 				mob.AddSchlub(fam)
+				kindId++
+				if kindId > int(world.SchlubKindMonk) {
+					kindId = int(world.SchlubKindVagrant)
+				}
+				fmt.Println(fam)
 			}
 
 			welcome, _ := message.Encode(&event.MetaWelcome{

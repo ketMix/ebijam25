@@ -64,7 +64,7 @@ func (g *Game) Setup() {
 
 		mob := g.Continent.NewMob(evt.Owner, evt.ID, float64(evt.X), float64(evt.Y))
 		mob.AddSchlub(schlubs...)
-		g.schlubSystem[mob.ID] = NewSchlubSystem(mob)
+		g.schlubSystem[mob.ID] = NewSchlubs(mob)
 
 		g.log.Debug("mob spawned", "id", evt.ID, "owner", evt.Owner, "x", evt.X, "y", evt.Y, "schlubs", len(schlubs))
 		if mob.ID == g.MobID {

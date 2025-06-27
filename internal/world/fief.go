@@ -56,16 +56,3 @@ func (f *Fief) GetTileAt(x, y float64) *Tile {
 	}
 	return &f.Tiles[tileIndex]
 }
-
-func (f *Fief) GetModifiers(mob *Mob) []Modifier {
-	if mob == nil {
-		return f.modifiers
-	}
-	tile := f.GetTileAt(mob.X, mob.Y)
-	if tile != nil {
-		modifiers := make([]Modifier, 0, len(f.modifiers)+1)
-		copy(modifiers, f.modifiers)
-		return append(modifiers, []Modifier{tile.Terrain.GetModifier()}...)
-	}
-	return f.modifiers
-}
