@@ -75,6 +75,29 @@ func (m MobDespawn) Type() string {
 	return "mob-despawn"
 }
 
+// MobDamage represents an even where a mob taks some damage, yo.
+type MobDamage struct {
+	ID     int `json:"id"`     // ID of the mob taking damage
+	Amount int `json:"amount"` // Amount of damage taken, should be number of schlubs killed
+}
+
+// Type is a friggin' method that returns a dumbass string to uniquely identify the type, WOW.
+func (m MobDamage) Type() string {
+	return "mob-damage"
+}
+
+// MobConvert represents an event where schlubs from one mob are converted to be in another mob.
+type MobConvert struct {
+	From   int `json:"from"`   // ID of the mob being converted from.
+	To     int `json:"to"`     // ID of the mob being converted into.
+	Amount int `json:"amount"` // Amount of schlubs being converted.
+}
+
+// Type do the thing you expect it be doin, truly WOW.
+func (m MobConvert) Type() string {
+	return "mob-convert"
+}
+
 func init() {
 	message.Register(&MobMerge{})
 	message.Register(&MobSplit{})
@@ -82,4 +105,6 @@ func init() {
 	message.Register(&MobPosition{})
 	message.Register(&MobSpawn{})
 	message.Register(&MobDespawn{})
+	message.Register(&MobDamage{})
+	message.Register(&MobConvert{})
 }
