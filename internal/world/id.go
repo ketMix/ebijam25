@@ -39,11 +39,10 @@ func (gen *IDGenerator) Reset() {
 type SchlubID int
 
 const (
-	SchlubKindVagrant SchlubID = iota
+	SchlubKindPlayer SchlubID = iota
+	SchlubKindVagrant
 	SchlubKindMonk
 	SchlubKindWarrior
-	SchlubKindHolyPerson
-	SchlubKindGreatLeader
 	SchlubKindBuilding
 	SchlubKindMobile
 )
