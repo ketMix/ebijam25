@@ -37,7 +37,7 @@ func (j *Joiner) Send(msg message.MessageI) {
 
 // Join joins the given host and publishes any received messages to the provided event bus.
 func (j *Joiner) Join(secure bool, host string, bus *event.Bus) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	if secure {
@@ -55,7 +55,7 @@ func (j *Joiner) Join(secure bool, host string, bus *event.Bus) {
 
 	go func() {
 		for {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*30)
 			j.cancel = cancel
 
 			kind, data, err := c.Read(ctx)
