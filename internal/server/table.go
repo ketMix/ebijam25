@@ -72,6 +72,11 @@ func (t *Table) Loop() {
 			fam := t.FamilyID.NextFamily()
 			t.FamilyID = fam
 
+			// Start with the player.
+			fam = fam.NextSchlub()
+			fam.SetKindID(int(world.SchlubKindPlayer)) // Set the kind to Player
+			mob.AddSchlub(fam)
+
 			kindId := int(world.SchlubKindVagrant)
 			for range debugSpawn {
 				fam = fam.NextSchlub()

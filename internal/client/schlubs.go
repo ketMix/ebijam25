@@ -412,6 +412,8 @@ func (s *Schlubs) Draw(screen *ebiten.Image) {
 			screen.DrawImage(s.monkImage, op)
 		} else if p.ID.KindID() == int(world.SchlubKindWarrior) {
 			screen.DrawImage(s.warriorImage, op)
+		} else if p.ID.KindID() == int(world.SchlubKindPlayer) {
+			screen.DrawImage(s.playerImage, op)
 		} else {
 			screen.DrawImage(s.vagrantImage, op)
 		}
