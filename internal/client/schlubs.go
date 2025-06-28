@@ -96,6 +96,7 @@ type Schlubs struct {
 	schlubs         []*Schlub
 	mob             *world.Mob
 	time            float64
+	playerImage     *ebiten.Image
 	vagrantImage    *ebiten.Image
 	monkImage       *ebiten.Image
 	warriorImage    *ebiten.Image
@@ -112,6 +113,8 @@ func getSchlubImage(kind int) *ebiten.Image {
 		img = stuff.GetImage("monke")
 	} else if kind == int(world.SchlubKindWarrior) {
 		img = stuff.GetImage("warrior")
+	} else if kind == int(world.SchlubKindPlayer) {
+		img = stuff.GetImage("player")
 	}
 	if img == nil {
 		img = stuff.GetImage("vagrant") // Default to vagrant if unknown kind
@@ -123,6 +126,7 @@ func NewSchlubs(mob *world.Mob) *Schlubs {
 	s := &Schlubs{
 		mob:             mob,
 		schlubs:         make([]*Schlub, 0, len(mob.Schlubs)),
+		playerImage:     getSchlubImage(int(world.SchlubKindPlayer)),
 		vagrantImage:    getSchlubImage(int(world.SchlubKindVagrant)),
 		monkImage:       getSchlubImage(int(world.SchlubKindMonk)),
 		warriorImage:    getSchlubImage(int(world.SchlubKindWarrior)),
