@@ -25,8 +25,11 @@ type Game struct {
 	Debug          bool
 	Dialoggies     Dialoggies
 	schlubSystem   map[world.ID]*Schlubs
-	skipTutorial   bool
 	Joined         bool
+	//
+	skipTutorial       bool
+	hasSeenFirstMob    bool
+	hasSeenFirstPlayer bool
 }
 
 // Setup sets up our event and request hooks.
@@ -113,6 +116,26 @@ func (g *Game) Setup() {
 			player := g.Continent.Mobs.FindByID(g.MobID)
 			if player != nil {
 				g.cammie.SetPosition(player.X, player.Y)
+			}
+		} else {
+			// If not this player's mob, show tutorial.
+			if !g.skipTutorial {
+				if !g.hasSeenFirstMob {
+					g.hasSeenFirstMob = true
+					g.Dialoggies.Add("Mobs", "A new mob made up of shlubs has appeared!\n\nThis may very well be the first mob you can convert by moving into it, but take care!\n\n", []string{"OK"}, func(s string) {
+						g.Dialoggies.dialogs = g.Dialoggies.dialogs[1:] // Remove the dialog from the stack.
+						g.Dialoggies.layout.ClearEvents()
+						g.Dialoggies.Next()
+					})
+				}
+				if !g.hasSeenFirstPlayer {
+					g.hasSeenFirstPlayer = true
+					g.Dialoggies.Add("Players", "You've come in vision range of a new player!\n\nYou can see their mob on the map but they might not be able to see you if they're smaller.\n\nYou can convert or slay their schlubs by moving into them, but be careful! They may try to do the same to you!", []string{"OK"}, func(s string) {
+						g.Dialoggies.dialogs = g.Dialoggies.dialogs[1:] // Remove the dialog from the stack.
+						g.Dialoggies.layout.ClearEvents()
+						g.Dialoggies.Next()
+					})
+				}
 			}
 		}
 		// Finally, let's set the mob's color to the player's color.
