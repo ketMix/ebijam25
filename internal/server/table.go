@@ -91,6 +91,16 @@ func (t *Table) Loop() {
 				Rate:     t.State.Tickrate,
 			})
 			player.conn.Write(ctx, websocket.MessageText, welcome)
+			// Also send a join event to all players.
+			for _, p := range t.players {
+				if p.ID != player.ID { // Don't send to the new player
+					joinEvent, _ := message.Encode(&event.MetaJoin{
+						Username: player.Username,
+						ID:       player.ID,
+					})
+					player.conn.Write(ctx, websocket.MessageText, joinEvent)
+				}
+			}
 		case player := <-t.playerLeave:
 			// Handle player leaving the table
 			for i, p := range t.players {
