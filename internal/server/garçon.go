@@ -49,7 +49,7 @@ func (g *Garçon) listen(port int) {
 				panic(err)
 			}
 
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 			defer cancel()
 
 			_, data, err := c.Read(ctx)
