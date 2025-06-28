@@ -57,7 +57,8 @@ type MobSpawn struct {
 	X     int `json:"x"`
 	Y     int `json:"y"`
 	// FIXME: This will not be cloned properly in Decode.
-	Schlubs []int `json:"schlubs"` // IDs of schlubs associated with the mob
+	Schlubs   []int    `json:"schlubs"`             // IDs of schlubs associated with the mob
+	Formation []string `json:"formation,omitempty"` // Optional formation order of schlubs
 }
 
 // Type returns the type of the MobSpawn event.
@@ -98,6 +99,17 @@ func (m MobConvert) Type() string {
 	return "mob-convert"
 }
 
+// MobFormation is a response to request-formation.
+type MobFormation struct {
+	ID        int      `json:"id"` // ID of the mob forming.
+	Formation []string `json:"formation"`
+}
+
+// Type is a type.
+func (m MobFormation) Type() string {
+	return "mob-formation"
+}
+
 func init() {
 	message.Register(&MobMerge{})
 	message.Register(&MobSplit{})
@@ -107,4 +119,5 @@ func init() {
 	message.Register(&MobDespawn{})
 	message.Register(&MobDamage{})
 	message.Register(&MobConvert{})
+	message.Register(&MobFormation{})
 }

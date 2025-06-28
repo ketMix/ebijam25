@@ -45,6 +45,18 @@ func (t *Table) Setup() {
 			} else {
 				t.log.Warn("move request received but mob not found", "mobID", msg.player.MobID)
 			}
+		case *request.Formation:
+			if mob := t.Continent.Mobs.FindByID(msg.player.MobID); mob != nil {
+				mob.Formation = evt.Order // Update the formation order of the mob
+				// Send that response.
+				response := &event.MobFormation{
+					ID:        mob.ID,
+					Formation: evt.Order,
+				}
+				t.SendVisibleMobEvent(mob, response)
+			} else {
+				t.log.Warn("formation request received but mob not found", "mobID", msg.player.MobID)
+			}
 		}
 	})
 

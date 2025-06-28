@@ -104,6 +104,19 @@ func (g *Game) Setup() {
 			g.log.Info("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
 		}
 	})
+	g.EventBus.Subscribe((event.MobFormation{}).Type(), func(e event.Event) {
+		evt := e.(*event.MobFormation)
+		// FIXME: We should only check for mobs in the visual radius of the player.
+		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
+			// I guess find the matching schlubs since we have that as an extra abstraction now.
+			if g.schlubSystem[mob.ID] != nil {
+				g.schlubSystem[mob.ID].Swap()
+				g.log.Info("mob formation updated", "id", evt.ID, "formation", evt.Formation)
+			} else {
+				g.log.Warn("mob formation event received but schlub system not found for mob", "id", evt.ID)
+			}
+		}
+	})
 
 	// **** Request -> network send hooks.
 	g.EventBus.Subscribe((request.Move{}).Type(), func(e event.Event) {
@@ -115,6 +128,9 @@ func (g *Game) Setup() {
 	})
 	g.EventBus.Subscribe((request.Construct{}).Type(), func(e event.Event) {
 		g.log.Debug("construct request sent", "event", e)
+	})
+	g.EventBus.Subscribe((request.Formation{}).Type(), func(e event.Event) {
+		g.log.Debug("formation request sent", "event", e)
 	})
 
 	g.schlubSystem = make(map[world.ID]*Schlubs)
@@ -132,6 +148,13 @@ func (g *Game) Update() error {
 			Y: int(y * world.FloatScale),
 		})
 		g.log.Debug("move request sent", "x", x, "y", y)
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyF) {
+		// Request a formation change for the player's mob.
+		g.EventBus.Publish(&request.Formation{
+			// Not populating for now...
+		})
 	}
 
 	// Handle mouse wheel input for zooming.

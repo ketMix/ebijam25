@@ -5,7 +5,6 @@ import (
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/ketMix/ebijam25/internal/world"
 	"github.com/ketMix/ebijam25/stuff"
 )
@@ -394,9 +393,6 @@ func (s *Schlubs) UpdateMob(serverRate float64) {
 
 func (s *Schlubs) Update(serverRate float64) {
 	s.updateRadius()
-	if inpututil.IsKeyJustPressed(ebiten.KeyF) {
-		s.Swap()
-	}
 	s.UpdateMob(serverRate)
 
 	s.applyForces()

@@ -63,11 +63,12 @@ func (t *Table) SendMobTo(mob *world.Mob, player *Player) {
 
 	// Send the mob spawn event to the player.
 	evt := &event.MobSpawn{
-		ID:      mob.ID,
-		Owner:   mob.OwnerID,
-		X:       int(mob.X),
-		Y:       int(mob.Y),
-		Schlubs: schlubs,
+		ID:        mob.ID,
+		Owner:     mob.OwnerID,
+		X:         int(mob.X),
+		Y:         int(mob.Y),
+		Schlubs:   schlubs,
+		Formation: mob.Formation,
 	}
 
 	player.bus.Publish(evt)

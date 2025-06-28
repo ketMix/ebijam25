@@ -67,6 +67,7 @@ type Mob struct {
 	TargetID         ID
 	Stats            *Stats // Stats of the mob
 	Schlubs          []SchlubID
+	Formation        []string // Formation order of schlubs
 }
 
 // Update does Mob logic, woo
