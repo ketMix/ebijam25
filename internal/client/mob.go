@@ -11,25 +11,24 @@ import (
 )
 
 // DrawMob draws a mobs on the screen.
-func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob) {
+func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob, simple bool) {
 	if mob == nil {
 		return
 	}
 
 	// Get particle system for this mob
 	ps, exists := g.schlubSystem[mob.ID]
-	if exists && ps != nil {
+	if !simple && exists && ps != nil {
 		// Draw particles with fluid effect
 		ps.Draw(screen)
 	} else {
 		// Fallback to simple circle if no particle system
 		radius := mob.Radius()
-		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), 2, color.NRGBA{255, 0, 255, 128}, true)
+		vector.DrawFilledCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), mob.Color, true)
+		// Draw schlub count
+		countText := fmt.Sprintf("%d", len(mob.Schlubs))
+		ebitenutil.DebugPrintAt(screen, countText, int(mob.X)-10, int(mob.Y)-5)
 	}
-
-	// Draw schlub count
-	countText := fmt.Sprintf("%d", len(mob.Schlubs))
-	ebitenutil.DebugPrintAt(screen, countText, int(mob.X)-10, int(mob.Y)-5)
 
 	// Draw vision circle for local player
 	if mob.ID == g.MobID {

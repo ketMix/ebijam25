@@ -331,7 +331,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// Draw ze continentie.
 	g.continentImage.Clear()
-	g.DrawContinent(g.continentImage)
+	g.DrawContinent(g.continentImage, g.cammie.zoom < 0.8)
 
 	// Center camera on player
 	if g.cammie.Locked() {

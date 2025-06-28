@@ -19,7 +19,7 @@ func DrawTile(screen *ebiten.Image, t world.Terrain, x, y, size float32) {
 	DrawTerrain(screen, opts, t)
 }
 
-func (g *Game) DrawFiefs(screen *ebiten.Image) {
+func (g *Game) DrawFiefs(screen *ebiten.Image, simple bool) {
 	if screen == nil {
 		g.log.Error("nil screen provided for drawing fiefs")
 		return
@@ -80,7 +80,7 @@ func (g *Game) DrawFiefs(screen *ebiten.Image) {
 			g.log.Warn("nil mob found in continent mobs")
 			continue
 		}
-		g.DrawMob(screen, mob)
+		g.DrawMob(screen, mob, simple)
 	}
 
 }

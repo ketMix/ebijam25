@@ -204,7 +204,7 @@ func (s *Schlubs) updateRadius() {
 	}
 	// Total radius
 	radiusSchlubs := math.Sqrt(float64(totalSchlubs) / math.Pi)
-	schlubWidth := s.mob.Radius() / radiusSchlubs
+	schlubWidth := s.mob.Spread() / radiusSchlubs
 	innerRadius := schlubWidth * (float64(innerSchlubs) / float64(totalSchlubs))
 	s.outerRadius = innerRadius + SchlubDiameter*4.0
 }

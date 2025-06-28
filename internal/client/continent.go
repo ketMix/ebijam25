@@ -6,9 +6,9 @@ import (
 
 var fiefImages []*ebiten.Image
 
-func (g *Game) DrawContinent(screen *ebiten.Image) {
+func (g *Game) DrawContinent(screen *ebiten.Image, simple bool) {
 	if g.Continent == nil || g.Continent.Fiefs == nil {
 		return
 	}
-	g.DrawFiefs(screen)
+	g.DrawFiefs(screen, simple)
 }
