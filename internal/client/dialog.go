@@ -134,10 +134,12 @@ func (d *Dialoggies) Next() {
 				if i > 0 {
 					x = "after button_" + fmt.Sprintf("%d", i-1)
 				}
+				w := 1.0 / float64(len(top.Buttons))
+				w *= 0.6
 				node := d.layout.AddNode(rebui.Node{
 					Type:            "DialogButton",
 					ID:              "button_" + fmt.Sprintf("%d", i),
-					Width:           "60%",
+					Width:           fmt.Sprintf("%f%%", w*100),
 					Height:          "30",
 					X:               x,
 					Y:               "after message",

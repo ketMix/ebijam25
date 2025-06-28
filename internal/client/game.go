@@ -25,6 +25,7 @@ type Game struct {
 	Debug          bool
 	Dialoggies     Dialoggies
 	schlubSystem   map[world.ID]*Schlubs
+	skipTutorial   bool
 	Joined         bool
 }
 
@@ -80,7 +81,11 @@ func (g *Game) Setup() {
 		g.MobID = evt.MobID
 		g.State.Continent = world.NewContinent(evt.Seed)
 		g.State.Tickrate = evt.Rate
-		g.Dialoggies.Add("SCHLUBWORLD", "Welcome to SCHLUBWORLD, "+evt.Username+"!\n\nIn this world, it is up to you to slowly rise to power by converting or defeating other schlubs!\nYour starting character must be kept alive.\n\nYour leader unit, henceforth known as \"you\" is very good at converting other schlubs, but be wary of other players or schlub mobs that are too large!", []string{"OK"}, func(s string) {
+		g.Dialoggies.Add("SCHLUBWORLD", "Welcome to SCHLUBWORLD, "+evt.Username+"!\n\nIn this world, it is up to you to slowly rise to power by converting or defeating other schlubs!\nYour starting character must be kept alive.\n\nYour leader unit, henceforth known as \"you\" is very good at converting other schlubs, but be wary of other players or schlub mobs that are too large!", []string{"Skip Tutorials", "OK"}, func(s string) {
+			if s == "Skip Tutorials" {
+				g.skipTutorial = true
+				g.log.Info("tutorial skipped")
+			}
 			g.Dialoggies.dialogs = g.Dialoggies.dialogs[1:] // Remove the dialog from the stack.
 			g.Dialoggies.layout.ClearEvents()
 			g.Dialoggies.Next()
