@@ -111,8 +111,25 @@ func (t *Table) Loop() {
 			for i, p := range t.players {
 				if p.ID == player.ID {
 					t.players = append(t.players[:i], t.players[i+1:]...) // Remove player from the slice
-					// TODO: Notify other players about the player leaving
 					break
+				}
+			}
+			for _, p := range t.players {
+				leaveEvent, _ := message.Encode(&event.MetaLeave{
+					ID: player.ID,
+				})
+				p.conn.Write(context.Background(), websocket.MessageText, leaveEvent) // Notify other players about the player leaving
+			}
+			// TODO: Notify other players about the player leaving
+			for _, mob := range t.Continent.Mobs {
+				if mob.OwnerID == player.ID {
+					for _, p := range t.players {
+						t.Continent.RemoveMob(mob) // Remove the mob associated with the player
+						despawnEvent, _ := message.Encode(&event.MobDespawn{
+							ID: mob.ID,
+						})
+						p.conn.Write(context.Background(), websocket.MessageText, despawnEvent)
+					}
 				}
 			}
 		case <-ticker.C:
