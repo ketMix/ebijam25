@@ -22,6 +22,7 @@ type Game struct {
 	fiefImages     []*ebiten.Image
 	cammie         Cammie
 	Debug          bool
+	Dialoggies     Dialoggies
 	schlubSystem   map[world.ID]*Schlubs
 	Joined         bool
 }
@@ -49,6 +50,11 @@ func (g *Game) Setup() {
 		g.MobID = evt.MobID
 		g.State.Continent = world.NewContinent(evt.Seed)
 		g.State.Tickrate = evt.Rate
+		g.Dialoggies.Add("SCHLUBWORLD", "Welcome to SCHLUBWORLD, "+evt.Username+"!\n\nIn this world, it is up to you to slowly rise to power by converting or defeating other schlubs!\nYour starting character must be kept alive.\n\nYour leader unit, henceforth known as \"you\" is very good at converting other schlubs, but be wary of other players or schlub mobs that are too large!", []string{"OK"}, func(s string) {
+			g.Dialoggies.dialogs = g.Dialoggies.dialogs[1:] // Remove the dialog from the stack.
+			g.Dialoggies.layout.ClearEvents()
+			g.Dialoggies.Next()
+		})
 	})
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobSpawn)
@@ -139,81 +145,86 @@ func (g *Game) Setup() {
 
 // Update updates the game state and processes events.
 func (g *Game) Update() error {
+	g.Dialoggies.Update()
 	if !g.Joined {
 		return nil
 	}
-	// Here is where we'd convert inputs, etc., into requests.
-	// Just for testing.
-	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		// Convert screen coordinates to world coordinates.
-		x, y := g.cammie.ScreenToWorld(ebiten.CursorPosition())
-		g.EventBus.Publish(&request.Move{
-			X: int(x * world.FloatScale),
-			Y: int(y * world.FloatScale),
-		})
-		g.log.Debug("move request sent", "x", x, "y", y)
-	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyF) {
-		// Request a formation change for the player's mob.
-		g.EventBus.Publish(&request.Formation{
-			// Not populating for now...
-		})
-	}
-
-	// Handle mouse wheel input for zooming.
-	dX, dY := ebiten.Wheel()
-	if dX != 0 || dY != 0 {
-		if dY < 0 {
-			g.cammie.UpdateZoom(-0.1) // Zoom out
-		} else if dY > 0 {
-			g.cammie.UpdateZoom(0.1) // Zoom in
+	// Input handling (dialoggies do be blocking, though).
+	if !g.Dialoggies.layout.HasEvents() && len(g.Dialoggies.dialogs) == 0 {
+		// Here is where we'd convert inputs, etc., into requests.
+		// Just for testing.
+		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+			// Convert screen coordinates to world coordinates.
+			x, y := g.cammie.ScreenToWorld(ebiten.CursorPosition())
+			g.EventBus.Publish(&request.Move{
+				X: int(x * world.FloatScale),
+				Y: int(y * world.FloatScale),
+			})
+			g.log.Debug("move request sent", "x", x, "y", y)
 		}
-	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
-		g.Debug = !g.Debug
-		g.log.Info("debug mode toggled", "enabled: ", g.Debug)
-	}
+		if inpututil.IsKeyJustPressed(ebiten.KeyF) {
+			// Request a formation change for the player's mob.
+			g.EventBus.Publish(&request.Formation{
+				// Not populating for now...
+			})
+		}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		g.cammie.ToggleLocked()
-		if g.cammie.Locked() {
-			player := g.Continent.Mobs.FindByID(g.MobID)
-			if player == nil {
-				g.log.Error("camera lock failed: player not found", "mobID", g.MobID)
-			} else {
-				// If the camera is locked, center it on the player.
-				g.cammie.SetPosition(player.X, player.Y)
+		// Handle mouse wheel input for zooming.
+		dX, dY := ebiten.Wheel()
+		if dX != 0 || dY != 0 {
+			if dY < 0 {
+				g.cammie.UpdateZoom(-0.1) // Zoom out
+			} else if dY > 0 {
+				g.cammie.UpdateZoom(0.1) // Zoom in
 			}
 		}
 
-		g.log.Info("camera lock toggled", "enabled: ", g.cammie.Locked())
-	}
-
-	// Move camera with WASD
-	pressedKeys := inpututil.AppendPressedKeys(nil)
-	y := 0.0
-	x := 0.0
-	mult := 1.0
-	for _, key := range pressedKeys {
-		switch key {
-		case ebiten.KeyW, ebiten.KeyUp:
-			y -= 1
-		case ebiten.KeyS, ebiten.KeyDown:
-			y += 1
-		case ebiten.KeyA, ebiten.KeyLeft:
-			x -= 1
-		case ebiten.KeyD, ebiten.KeyRight:
-			x += 1
-		case ebiten.KeyShift:
-			mult = 5.0
+		if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
+			g.Debug = !g.Debug
+			g.log.Info("debug mode toggled", "enabled: ", g.Debug)
 		}
-	}
 
-	if x != 0 || y != 0 {
-		// Move the camera based on the pressed keys.
-		g.cammie.AddPosition(x*mult, y*mult)
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+			g.cammie.ToggleLocked()
+			if g.cammie.Locked() {
+				player := g.Continent.Mobs.FindByID(g.MobID)
+				if player == nil {
+					g.log.Error("camera lock failed: player not found", "mobID", g.MobID)
+				} else {
+					// If the camera is locked, center it on the player.
+					g.cammie.SetPosition(player.X, player.Y)
+				}
+			}
+
+			g.log.Info("camera lock toggled", "enabled: ", g.cammie.Locked())
+		}
+
+		// Move camera with WASD
+		pressedKeys := inpututil.AppendPressedKeys(nil)
+		y := 0.0
+		x := 0.0
+		mult := 1.0
+		for _, key := range pressedKeys {
+			switch key {
+			case ebiten.KeyW, ebiten.KeyUp:
+				y -= 1
+			case ebiten.KeyS, ebiten.KeyDown:
+				y += 1
+			case ebiten.KeyA, ebiten.KeyLeft:
+				x -= 1
+			case ebiten.KeyD, ebiten.KeyRight:
+				x += 1
+			case ebiten.KeyShift:
+				mult = 5.0
+			}
+		}
+
+		if x != 0 || y != 0 {
+			// Move the camera based on the pressed keys.
+			g.cammie.AddPosition(x*mult, y*mult)
+		}
 	}
 	g.EventBus.ProcessEvents()
 
@@ -298,6 +309,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw the camera to the screen.
 	g.cammie.Draw(screen)
 
+	// Dialoggies.
+	g.Dialoggies.Draw(screen)
+
 	// And, of course, debuggies.
 	if g.Debug {
 		g.debug.Draw(screen)
@@ -305,6 +319,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(ow, oh int) (int, int) {
+	g.Dialoggies.Layout(float64(ow), float64(oh))
 	// Refresh the camera's image as necessary.
 	g.cammie.Layout(ow, oh)
 	return ow, oh
