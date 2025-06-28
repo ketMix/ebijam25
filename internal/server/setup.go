@@ -47,11 +47,18 @@ func (t *Table) Setup() {
 			}
 		case *request.Formation:
 			if mob := t.Continent.Mobs.FindByID(msg.player.MobID); mob != nil {
-				mob.Formation = evt.Order // Update the formation order of the mob
+				// Eh... we're the arbiters of this.
+				if mob.OuterKind == world.SchlubKindVagrant || mob.OuterKind == 0 {
+					mob.OuterKind = world.SchlubKindMonk // Change the outer kind to monk
+				} else if mob.OuterKind == world.SchlubKindMonk {
+					mob.OuterKind = world.SchlubKindWarrior // Change the outer kind to warrior
+				} else {
+					mob.OuterKind = world.SchlubKindVagrant // Reset to vagrant
+				}
 				// Send that response.
 				response := &event.MobFormation{
 					ID:        mob.ID,
-					Formation: evt.Order,
+					OuterKind: int(mob.OuterKind),
 				}
 				t.SendVisibleMobEvent(mob, response)
 			} else {

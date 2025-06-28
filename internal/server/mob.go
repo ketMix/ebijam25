@@ -68,7 +68,7 @@ func (t *Table) SendMobTo(mob *world.Mob, player *Player) {
 		X:         int(mob.X),
 		Y:         int(mob.Y),
 		Schlubs:   schlubs,
-		Formation: mob.Formation,
+		OuterKind: int(mob.OuterKind),
 	}
 
 	player.bus.Publish(evt)

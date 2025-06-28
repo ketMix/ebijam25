@@ -27,7 +27,7 @@ func (m Move) Type() string {
 // Formation represents a request to adjust the formation of a mob to have the schlubs organized from center outwards.
 type Formation struct {
 	// FIXME: This will not be cloned properly in Decode.
-	Order []string `json:"order,omitempty"` // Order of schlubs from center outwards.
+	//Order []string `json:"order,omitempty"` // Order of schlubs from center outwards.
 }
 
 // Type returns the type of the Formation request.

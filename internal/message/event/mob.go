@@ -1,6 +1,8 @@
 package event
 
-import "github.com/ketMix/ebijam25/internal/message"
+import (
+	"github.com/ketMix/ebijam25/internal/message"
+)
 
 // MobMerge represents an event where one mob is merged into another.
 type MobMerge struct {
@@ -57,8 +59,8 @@ type MobSpawn struct {
 	X     int `json:"x"`
 	Y     int `json:"y"`
 	// FIXME: This will not be cloned properly in Decode.
-	Schlubs   []int    `json:"schlubs"`             // IDs of schlubs associated with the mob
-	Formation []string `json:"formation,omitempty"` // Optional formation order of schlubs
+	Schlubs   []int `json:"schlubs"`         // IDs of schlubs associated with the mob
+	OuterKind int   `json:"outer,omitempty"` // Optional outer kind of the mob, used for formation
 }
 
 // Type returns the type of the MobSpawn event.
@@ -101,8 +103,8 @@ func (m MobConvert) Type() string {
 
 // MobFormation is a response to request-formation.
 type MobFormation struct {
-	ID        int      `json:"id"` // ID of the mob forming.
-	Formation []string `json:"formation"`
+	ID        int `json:"id"` // ID of the mob forming.
+	OuterKind int `json:"outer"`
 }
 
 // Type is a type.

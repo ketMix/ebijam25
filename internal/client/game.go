@@ -184,8 +184,8 @@ func (g *Game) Setup() {
 		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
 			// I guess find the matching schlubs since we have that as an extra abstraction now.
 			if g.schlubSystem[mob.ID] != nil {
-				g.schlubSystem[mob.ID].Swap()
-				g.log.Info("mob formation updated", "id", evt.ID, "formation", evt.Formation)
+				g.schlubSystem[mob.ID].Swap(world.SchlubID(evt.OuterKind))
+				g.log.Info("mob formation updated", "id", evt.ID, "formation", evt.OuterKind)
 			} else {
 				g.log.Warn("mob formation event received but schlub system not found for mob", "id", evt.ID)
 			}

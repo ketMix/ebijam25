@@ -83,7 +83,7 @@ func (t *Table) Loop() {
 				fam.SetKindID(kindId)
 				mob.AddSchlub(fam)
 				kindId++
-				if kindId > int(world.SchlubKindMonk) {
+				if kindId > int(world.SchlubKindWarrior) {
 					kindId = int(world.SchlubKindVagrant)
 				}
 			}

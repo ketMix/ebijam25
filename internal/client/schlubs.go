@@ -175,14 +175,8 @@ func (s *Schlubs) getCartesian(schlub *Schlub) (float64, float64) {
 	return x, y
 }
 
-func (s *Schlubs) Swap() {
-	if s.outerSchlubKind == world.SchlubKindVagrant {
-		s.outerSchlubKind = world.SchlubKindMonk
-	} else if s.outerSchlubKind == world.SchlubKindMonk {
-		s.outerSchlubKind = world.SchlubKindWarrior
-	} else {
-		s.outerSchlubKind = world.SchlubKindVagrant
-	}
+func (s *Schlubs) Swap(kind world.SchlubID) {
+	s.outerSchlubKind = kind
 
 	s.updateRadius()
 }
