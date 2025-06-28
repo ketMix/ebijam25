@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/kettek/rebui"
@@ -43,6 +44,12 @@ func (d *Dialoggies) Add(title, message string, buttons []string, onSubmit func(
 	if len(d.dialogs) == 1 {
 		d.Next()
 		fmt.Println("NEXT")
+	}
+}
+
+func (d *Dialoggies) SetTitleColor(c color.NRGBA) {
+	if d.titleNode != nil {
+		d.titleNode.Widget.(*widgets.Text).AssignBackgroundColor(c)
 	}
 }
 

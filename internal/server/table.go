@@ -91,6 +91,7 @@ func (t *Table) Loop() {
 			welcome, _ := message.Encode(&event.MetaWelcome{
 				Username: player.Username,
 				ID:       player.ID,
+				Color:    player.Color,
 				MobID:    mob.ID,
 				Seed:     t.Seed,
 				Rate:     t.State.Tickrate,
@@ -101,6 +102,7 @@ func (t *Table) Loop() {
 				if p.ID != player.ID { // Don't send to the new player
 					joinEvent, _ := message.Encode(&event.MetaJoin{
 						Username: player.Username,
+						Color:    player.Color,
 						ID:       player.ID,
 					})
 					player.conn.Write(ctx, websocket.MessageText, joinEvent)

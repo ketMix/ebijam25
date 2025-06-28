@@ -1,12 +1,15 @@
 package request
 
 import (
+	"image/color"
+
 	"github.com/ketMix/ebijam25/internal/message"
 )
 
 // Join represents a request to join the game with a username.
 type Join struct {
-	Username string `json:"username"`
+	Username string      `json:"username"`
+	Color    color.NRGBA `json:"color"` // Color is the player's color in NRGBA format.
 }
 
 // Type returns the type of the Join request.

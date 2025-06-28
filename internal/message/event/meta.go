@@ -1,11 +1,16 @@
 package event
 
-import "github.com/ketMix/ebijam25/internal/message"
+import (
+	"image/color"
+
+	"github.com/ketMix/ebijam25/internal/message"
+)
 
 // MetaJoin represents an event where a player joins the game with a username and unique ID.
 type MetaJoin struct {
-	Username string `json:"username"`
-	ID       int    `json:"id"`
+	Username string      `json:"username"`
+	ID       int         `json:"id"`
+	Color    color.NRGBA `json:"color"` // Color is the player's color in NRGBA format
 }
 
 // Type returns the type of the MetaJoin event.
@@ -15,11 +20,12 @@ func (m MetaJoin) Type() string {
 
 // MetaWelcome represents a welcome event for a player joining the game. It is the counterpart to MetaJoin.
 type MetaWelcome struct {
-	Username string `json:"username"`
-	ID       int    `json:"id"`
-	MobID    int    `json:"mobId"` // ID of the mob associated with the player
-	Seed     uint   `json:"seed"`  // Seed for this game's continent generation
-	Rate     int    `json:"rate"`  // Tick
+	Username string      `json:"username"`
+	ID       int         `json:"id"`
+	Color    color.NRGBA `json:"color"` // Color is the player's color in NRGBA format
+	MobID    int         `json:"mobId"` // ID of the mob associated with the player
+	Seed     uint        `json:"seed"`  // Seed for this game's continent generation
+	Rate     int         `json:"rate"`  // Tick
 }
 
 // Type returns the type of the MetaWelcome event.

@@ -1,17 +1,21 @@
 package world
 
+import "image/color"
+
 // Player represents a player in the game world.
 type Player struct {
-	Username      string // Player's username
-	ID            int    // Player's unique ID
-	MobID         ID     // Player's unique mob ID
-	VisibleMobIDs []ID   // List of mobs visible to the player
+	Username      string      // Player's username
+	ID            int         // Player's unique ID
+	MobID         ID          // Player's unique mob ID
+	VisibleMobIDs []ID        // List of mobs visible to the player
+	Color         color.NRGBA // Player's color in NRGBA format
 }
 
 // NewPlayer makes a new player, wow.
-func NewPlayer(user string, id ID) *Player {
+func NewPlayer(user string, id ID, color color.NRGBA) *Player {
 	return &Player{
 		Username: user,
 		ID:       id,
+		Color:    color,
 	}
 }

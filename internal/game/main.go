@@ -2,6 +2,8 @@ package game
 
 import (
 	"image/color"
+	"math/rand"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/ketMix/ebijam25/internal/client"
@@ -42,8 +44,11 @@ func NewGame(localGame bool) *Game {
 	}
 
 	// Set up some layout.
+	var clr color.NRGBA
+	var colorNode *rebui.Node
 	node := g.layout.AddNode(rebui.Node{
 		Type:            "TextInput",
+		ID:              "name",
 		Width:           "50%",
 		Height:          "30",
 		X:               "50%",
@@ -60,9 +65,36 @@ func NewGame(localGame bool) *Game {
 	node.Widget.(*widgets.TextInput).OnSubmit = func(s string) {
 		g.client.EventBus.Publish(&request.Join{
 			Username: s,
+			Color:    clr,
 		})
 		g.client.Joined = true
 		g.layout.RemoveNode(node)
+		g.layout.RemoveNode(colorNode)
+	}
+	colorNode = g.layout.AddNode(rebui.Node{
+		Type:            "TextInput",
+		Width:           "20%",
+		Height:          "30",
+		X:               "after name",
+		Y:               "at name",
+		ForegroundColor: "white",
+		BackgroundColor: "black",
+		BorderColor:     "white",
+		VerticalAlign:   rebui.AlignMiddle,
+		HorizontalAlign: rebui.AlignCenter,
+		FocusIndex:      1,
+	})
+	// Randomize the initial color.
+	clr.R = uint8(100 + rand.Intn(155))
+	clr.G = uint8(100 + rand.Intn(155))
+	clr.B = uint8(100 + rand.Intn(155))
+	clr.A = 255
+	colorNode.Widget.(*widgets.TextInput).AssignText("#" + strconv.FormatUint(uint64(clr.R), 16) +
+		strconv.FormatUint(uint64(clr.G), 16) +
+		strconv.FormatUint(uint64(clr.B), 16))
+	colorNode.Widget.(*widgets.TextInput).OnChange = func(s string) {
+		clr = stringToColor(s, color.NRGBA{255, 255, 255, 255})
+		clr.A = 255 // Ensure alpha is always 255.
 	}
 
 	return g

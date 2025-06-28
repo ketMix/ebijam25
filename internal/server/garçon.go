@@ -72,7 +72,7 @@ func (g *Garçon) listen(port int) {
 					c.Close(websocket.StatusTryAgainLater, "no open tables")
 					return
 				}
-				player := world.NewPlayer(msg.Username, -1)
+				player := world.NewPlayer(msg.Username, -1, msg.Color)
 				table.playerAdd <- &Player{
 					Player: *player,
 					bus:    *event.NewBus("player-" + player.Username),

@@ -38,7 +38,8 @@ func (g *Game) Setup() {
 	// **** Event -> local state change hooks.
 	g.EventBus.Subscribe((event.MetaJoin{}).Type(), func(e event.Event) {
 		evt := e.(*event.MetaJoin)
-		fmt.Println("Player joined:", evt.Username, "ID:", evt.ID)
+		fmt.Println("Player joined:", evt.Username, "ID:", evt.ID, "Color:", evt.Color)
+		// TODO: Add and us this to set mob colors!
 	})
 	g.EventBus.Subscribe((event.MetaLeave{}).Type(), func(e event.Event) {
 		evt := e.(*event.MetaLeave)
@@ -46,6 +47,7 @@ func (g *Game) Setup() {
 	})
 	g.EventBus.Subscribe((event.MetaWelcome{}).Type(), func(e event.Event) {
 		evt := e.(*event.MetaWelcome)
+		g.Color = evt.Color
 		g.PlayerID = evt.ID
 		g.MobID = evt.MobID
 		g.State.Continent = world.NewContinent(evt.Seed)
@@ -55,6 +57,7 @@ func (g *Game) Setup() {
 			g.Dialoggies.layout.ClearEvents()
 			g.Dialoggies.Next()
 		})
+		g.Dialoggies.SetTitleColor(evt.Color) // Just for fanciness.
 	})
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobSpawn)
