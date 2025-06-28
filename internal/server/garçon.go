@@ -46,7 +46,8 @@ func (g *Garçon) listen(port int) {
 
 			c, err := websocket.Accept(w, r, nil)
 			if err != nil {
-				panic(err)
+				fmt.Println("error accepting websocket connection:", err)
+				return
 			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
@@ -54,7 +55,9 @@ func (g *Garçon) listen(port int) {
 
 			_, data, err := c.Read(ctx)
 			if err != nil {
-				panic(err)
+				fmt.Println("error reading from connection:", err)
+				c.Close(websocket.StatusInternalError, "failed to read initial message")
+				return
 			}
 			msg, err := message.Decode(data)
 			if err != nil {
