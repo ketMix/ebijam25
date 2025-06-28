@@ -23,6 +23,7 @@ type Game struct {
 	cammie         Cammie
 	Debug          bool
 	schlubSystem   map[world.ID]*Schlubs
+	Joined         bool
 }
 
 // Setup sets up our event and request hooks.
@@ -138,6 +139,9 @@ func (g *Game) Setup() {
 
 // Update updates the game state and processes events.
 func (g *Game) Update() error {
+	if !g.Joined {
+		return nil
+	}
 	// Here is where we'd convert inputs, etc., into requests.
 	// Just for testing.
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
