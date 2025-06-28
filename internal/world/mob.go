@@ -1,6 +1,7 @@
 package world
 
 import (
+	"image/color"
 	"math"
 	"slices"
 
@@ -62,8 +63,9 @@ func (m *Mobs) Remove(mob *Mob) {
 type Mob struct {
 	OwnerID          ID // ID of the owner(player)
 	ID               ID
-	X, Y             float64 // Position of the mob in the world
-	TargetX, TargetY float64 // Target position to move to
+	Color            color.NRGBA // Color of the mob in NRGBA format, this is duplicated from the owning player.
+	X, Y             float64     // Position of the mob in the world
+	TargetX, TargetY float64     // Target position to move to
 	TargetID         ID
 	Stats            *Stats // Stats of the mob
 	Schlubs          []SchlubID

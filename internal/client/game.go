@@ -110,6 +110,14 @@ func (g *Game) Setup() {
 				g.cammie.SetPosition(player.X, player.Y)
 			}
 		}
+		// Finally, let's set the mob's color to the player's color.
+		for _, player := range g.players {
+			if player.ID == evt.Owner {
+				mob.Color = player.Color
+				g.log.Debug("mob color set", "id", evt.ID, "color", mob.Color)
+				break
+			}
+		}
 	})
 	g.EventBus.Subscribe((event.MobDespawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobDespawn)

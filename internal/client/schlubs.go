@@ -1,6 +1,7 @@
 package client
 
 import (
+	"image/color"
 	"math"
 	"math/rand"
 
@@ -208,11 +209,8 @@ func (s *Schlubs) updateRadius() {
 	s.outerRadius = innerRadius + SchlubDiameter*4.0
 }
 
-func (s *Schlubs) getSchlubColor() [4]float32 {
-	// TODO: Use mob color or type-based color
-	// For now, slight variations in brightness
-	brightness := 0.85 + rand.Float32()*0.15
-	return [4]float32{brightness, brightness, brightness, 1.0}
+func (s *Schlubs) getSchlubColor() color.NRGBA {
+	return s.mob.Color
 }
 
 // PersuadeSchlub adds an existing schlub from another mob
@@ -406,7 +404,7 @@ func (s *Schlubs) Draw(screen *ebiten.Image) {
 		x, y := s.getCartesian(p)
 		op.GeoM.Translate(x, y)
 		color := s.getSchlubColor()
-		op.ColorScale.Scale(color[0], color[1], color[2], color[3])
+		op.ColorScale.ScaleWithColor(color)
 
 		if p.ID.KindID() == int(world.SchlubKindMonk) {
 			screen.DrawImage(s.monkImage, op)
