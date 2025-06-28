@@ -33,9 +33,9 @@ func NewGame(localGame bool) *Game {
 	if localGame {
 		// Spin up our garçon and join it.
 		g.garçon.Serve(9099, true)
-		g.client.Join("localhost:9099", &g.client.EventBus)
+		g.client.Join(false, "localhost:9099", &g.client.EventBus)
 	} else {
-		g.client.Join("schlubs.gamu.group:9099", &g.client.EventBus)
+		g.client.Join(true, "schlubs.gamu.group:9099", &g.client.EventBus)
 	}
 	// Send our join request with our name. TODO: Use a text field.
 	g.client.EventBus.Publish(&request.Join{

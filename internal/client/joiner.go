@@ -36,11 +36,17 @@ func (j *Joiner) Send(msg message.MessageI) {
 }
 
 // Join joins the given host and publishes any received messages to the provided event bus.
-func (j *Joiner) Join(host string, bus *event.Bus) {
+func (j *Joiner) Join(secure bool, host string, bus *event.Bus) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	c, _, err := websocket.Dial(ctx, "ws://"+host, nil)
+	if secure {
+		host = "wss://" + host
+	} else {
+		host = "ws://" + host
+	}
+
+	c, _, err := websocket.Dial(ctx, host, nil)
 	if err != nil {
 		panic(err)
 	}
