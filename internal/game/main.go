@@ -25,21 +25,22 @@ func NewGame(localGame bool) *Game {
 	g.client.Setup()
 	g.client.EventBus.NoQueue = true
 
+	// Subscribe to our own requests to automatically network send them.
+	g.client.EventBus.SubscribePrefix("request-", func(e event.Event) {
+		g.client.Send(e)
+	})
+
 	if localGame {
-		// Subscribe to our own requests to automatically network send them.
-		g.client.EventBus.SubscribePrefix("request-", func(e event.Event) {
-			g.client.Send(e)
-		})
-
 		// Spin up our garçon and join it.
-		g.garçon.Serve(8080, true)
-		g.client.Join("localhost:8080", &g.client.EventBus)
-
-		// Send our join request with our name.
-		g.client.EventBus.Publish(&request.Join{
-			Username: "Player1",
-		})
+		g.garçon.Serve(9099, true)
+		g.client.Join("localhost:9099", &g.client.EventBus)
+	} else {
+		g.client.Join("schlubs.gamu.group:9099", &g.client.EventBus)
 	}
+	// Send our join request with our name. TODO: Use a text field.
+	g.client.EventBus.Publish(&request.Join{
+		Username: "Player1",
+	})
 
 	return g
 }
