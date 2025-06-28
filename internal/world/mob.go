@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	FloatScale       float64 = 10.0
+	FloatScale       float64 = 7.0
 	MaxSchlubsPerMob int     = 1000 // Max number of schlubs in a mob
 )
 
@@ -74,7 +74,7 @@ type Mob struct {
 
 // Update does Mob logic, woo
 func (m *Mob) Update(state *State) {
-	speed := 1.0 * float64(state.Tickrate)
+	speed := 0.7 * float64(state.Tickrate)
 
 	// Acquire our target mob if we have one set.
 	if m.TargetID != 0 {

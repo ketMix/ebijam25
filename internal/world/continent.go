@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-const ContinientFiefSpan = 9                                  // Number of fiefs per row (e.g., 10 for a 10x10 grid)
+const ContinientFiefSpan = 35                                 // Number of fiefs per row (e.g., 10 for a 10x10 grid)
 const ContinentPixelSpan = ContinientFiefSpan * FiefPixelSpan // Total pixel span of the continent
 
 type Continent struct {
