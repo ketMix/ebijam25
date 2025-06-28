@@ -16,6 +16,7 @@ import (
 type Game struct {
 	Joiner
 	world.State
+	players        []*world.Player
 	log            *slog.Logger
 	debug          Debug
 	continentImage *ebiten.Image
@@ -38,17 +39,44 @@ func (g *Game) Setup() {
 	// **** Event -> local state change hooks.
 	g.EventBus.Subscribe((event.MetaJoin{}).Type(), func(e event.Event) {
 		evt := e.(*event.MetaJoin)
-		fmt.Println("Player joined:", evt.Username, "ID:", evt.ID, "Color:", evt.Color)
-		// TODO: Add and us this to set mob colors!
+		for _, player := range g.players {
+			if player.ID == evt.ID {
+				g.log.Warn("player already exists", "id", evt.ID, "username", evt.Username)
+				return // Player already exists, no need to add again.
+			}
+		}
+		g.players = append(g.players, world.NewPlayer(evt.Username, evt.ID, evt.Color))
 	})
 	g.EventBus.Subscribe((event.MetaLeave{}).Type(), func(e event.Event) {
 		evt := e.(*event.MetaLeave)
 		fmt.Println("Player left:", evt.ID)
+		for i, player := range g.players {
+			if player.ID == evt.ID {
+				g.players = append(g.players[:i], g.players[i+1:]...) // Remove the player from the slice.
+				g.log.Info("player removed", "id", evt.ID, "username", player.Username)
+				return
+			}
+		}
+		g.log.Warn("player left but not found", "id", evt.ID)
 	})
 	g.EventBus.Subscribe((event.MetaWelcome{}).Type(), func(e event.Event) {
 		evt := e.(*event.MetaWelcome)
 		g.Color = evt.Color
 		g.PlayerID = evt.ID
+
+		// I guess we can presume a welcome event should proc adding the player.
+		found := false
+		for _, player := range g.players {
+			if player.ID == evt.ID {
+				found = true
+				g.log.Warn("player already exists", "id", evt.ID, "username", evt.Username)
+				break
+			}
+		}
+		if !found {
+			g.players = append(g.players, world.NewPlayer(evt.Username, evt.ID, evt.Color))
+		}
+
 		g.MobID = evt.MobID
 		g.State.Continent = world.NewContinent(evt.Seed)
 		g.State.Tickrate = evt.Rate
