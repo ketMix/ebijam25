@@ -32,9 +32,9 @@ func main() {
 		Exec("go", "env", "GOROOT").
 		Result(func(i interface{}) {
 			goRoot := strings.TrimSpace(i.(string))
-			wasmSrc = filepath.Join(goRoot, "misc/wasm/wasm_exec.js")
+			wasmSrc = filepath.Join(goRoot, "lib/wasm/wasm_exec.js")
 		}).
-		Exec("cp", &wasmSrc, "web/")
+		Exec("cp", &wasmSrc, "./web/")
 
 	// Mob
 	Task("mob-build").

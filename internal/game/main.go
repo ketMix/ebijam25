@@ -32,7 +32,7 @@ func NewGame(localGame bool) *Game {
 		})
 
 		// Spin up our garçon and join it.
-		g.garçon.Serve(8080)
+		g.garçon.Serve(8080, true)
 		g.client.Join("localhost:8080", &g.client.EventBus)
 
 		// Send our join request with our name.

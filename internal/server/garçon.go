@@ -31,6 +31,20 @@ func (g *Garçon) Serve(port int, shouldGoroutine bool) {
 func (g *Garçon) listen(port int) {
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port),
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet {
+				if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+					http.ServeFile(w, r, "web/index.html")
+				} else if r.URL.Path == "/wasm_exec.js" {
+					http.ServeFile(w, r, "web/wasm_exec.js")
+				} else if r.URL.Path == "/ebijam25.wasm" {
+					http.ServeFile(w, r, "web/ebijam25.wasm")
+				} else {
+					http.NotFound(w, r)
+					return
+				}
+				return
+			}
+
 			c, err := websocket.Accept(w, r, nil)
 			if err != nil {
 				panic(err)
