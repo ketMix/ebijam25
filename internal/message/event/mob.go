@@ -80,8 +80,9 @@ func (m MobDespawn) Type() string {
 
 // MobDamage represents an even where a mob taks some damage, yo.
 type MobDamage struct {
-	ID     int `json:"id"`     // ID of the mob taking damage
-	Amount int `json:"amount"` // Amount of damage taken, should be number of schlubs killed
+	ID         int   `json:"id"`          // ID of the mob taking damage
+	AttackerID int   `json:"attacker_id"` // ID of the mob that dealt the damage
+	IDs        []int `json:"schlubs"`     // IDs of the mobs being killed.
 }
 
 // Type is a friggin' method that returns a dumbass string to uniquely identify the type, WOW.
@@ -91,9 +92,9 @@ func (m MobDamage) Type() string {
 
 // MobConvert represents an event where schlubs from one mob are converted to be in another mob.
 type MobConvert struct {
-	From   int `json:"from"`   // ID of the mob being converted from.
-	To     int `json:"to"`     // ID of the mob being converted into.
-	Amount int `json:"amount"` // Amount of schlubs being converted.
+	From int   `json:"from"`    // ID of the mob being converted from.
+	To   int   `json:"to"`      // ID of the mob being converted into.
+	IDs  []int `json:"schlubs"` // IDs of the mobs being pulled.
 }
 
 // Type do the thing you expect it be doin, truly WOW.

@@ -206,6 +206,41 @@ func (s *Schlubs) getSchlubColor() color.NRGBA {
 	return s.mob.Color
 }
 
+func (s *Schlubs) CollectSchlubsByID(schlubs ...world.SchlubID) []*world.Schlub {
+	var collected []*world.Schlub
+	for _, id := range schlubs {
+		for _, p := range s.schlubs {
+			if p.ID == id {
+				collected = append(collected, &p.Schlub)
+				break
+			}
+		}
+	}
+	return collected
+}
+
+func (s *Schlubs) RemoveSchlubs(schlubs ...world.SchlubID) {
+	if len(s.schlubs) == 0 {
+		return
+	}
+
+	for _, id := range schlubs {
+		for i, p := range s.schlubs {
+			if p.ID == id {
+				s.toRemove = append(s.toRemove, i)
+				break
+			}
+		}
+	}
+
+	// Remove collected indices in reverse order to avoid shifting issues
+	for i := len(s.toRemove) - 1; i >= 0; i-- {
+		index := s.toRemove[i]
+		s.schlubs = append(s.schlubs[:index], s.schlubs[index+1:]...)
+	}
+	s.toRemove = s.toRemove[:0] // Clear the slice for next use
+}
+
 // PersuadeSchlub adds an existing schlub from another mob
 func (s *Schlubs) PersuadeSchlubs(gullySchlubs []*world.Schlub) {
 	if len(s.schlubs) >= world.MaxSchlubsPerMob {
