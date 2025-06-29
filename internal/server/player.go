@@ -15,6 +15,7 @@ type Player struct {
 	bus          event.Bus
 	conn         *websocket.Conn
 	cancel       context.CancelFunc
+	lastRefresh  int
 }
 
 // PlayerMessage is a wrapper around messages to attach a player to it. This is used to ensure that messages received by a connection are mapped to their appropriate player.

@@ -147,6 +147,21 @@ func (t *Table) Update() {
 
 	for _, player := range t.players {
 		t.RefreshVisibleMobs(player)
+		// Also periodically refresh all player info.
+		player.lastRefresh++
+		if player.lastRefresh > 30 { // Refresh every 30 ticks
+			player.lastRefresh = 0
+			for _, p := range t.players {
+				if mob := t.Continent.Mobs.FindByID(p.MobID); mob != nil {
+					refreshEvent, _ := message.Encode(&event.MetaRefresh{
+						ID:    p.ID,
+						Count: len(mob.Schlubs),
+					})
+					player.conn.Write(context.Background(), websocket.MessageText, refreshEvent)
+				}
+			}
+		}
+
 		player.bus.ProcessEvents()
 	}
 	t.director.Update()

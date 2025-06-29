@@ -43,8 +43,20 @@ func (m MetaLeave) Type() string {
 	return "meta-leave"
 }
 
+// MetaRefresh refreshes a given player's mob count.
+type MetaRefresh struct {
+	ID    int `json:"id"`    // ID of the player whose mob count is being refreshed
+	Count int `json:"count"` // Count of mobs owned by the player
+}
+
+// Type returns the type of the MetaRefresh event.
+func (m MetaRefresh) Type() string {
+	return "meta-refresh"
+}
+
 func init() {
 	message.Register(&MetaJoin{})
 	message.Register(&MetaWelcome{})
 	message.Register(&MetaLeave{})
+	message.Register(&MetaRefresh{})
 }

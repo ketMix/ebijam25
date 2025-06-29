@@ -24,6 +24,7 @@ type Game struct {
 	cammie         Cammie
 	Debug          bool
 	Dialoggies     Dialoggies
+	Hiscore        Hiscore
 	schlubSystem   map[world.ID]*Schlubs
 	Joined         bool
 	//
@@ -94,6 +95,16 @@ func (g *Game) Setup() {
 			g.Dialoggies.Next()
 		})
 		g.Dialoggies.SetTitleColor(evt.Color) // Just for fanciness.
+	})
+	g.EventBus.Subscribe((event.MetaRefresh{}).Type(), func(e event.Event) {
+		evt := e.(*event.MetaRefresh)
+		for _, player := range g.players {
+			if player.ID == evt.ID {
+				player.Count = evt.Count
+				g.log.Debug("player mob count refreshed", "id", evt.ID, "count", evt.Count)
+				return
+			}
+		}
 	})
 	g.EventBus.Subscribe((event.MobSpawn{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobSpawn)
@@ -345,6 +356,8 @@ func (g *Game) Update() error {
 	// Update the camera to reflect any positional changes.
 	g.cammie.Update()
 
+	g.Hiscore.Update(g.players)
+
 	// Update our debug info.
 	if g.Debug {
 		g.UpdateDebug()
@@ -423,6 +436,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw the camera to the screen.
 	g.cammie.Draw(screen)
 
+	g.Hiscore.Draw(screen)
+
 	// Dialoggies.
 	g.Dialoggies.Draw(screen)
 
@@ -433,6 +448,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(ow, oh int) (int, int) {
+	g.Hiscore.Layout(ow, oh)
 	g.Dialoggies.Layout(float64(ow), float64(oh))
 	// Refresh the camera's image as necessary.
 	g.cammie.Layout(ow, oh)
