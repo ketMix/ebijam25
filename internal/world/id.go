@@ -74,13 +74,15 @@ func (s SchlubID) FamilyID() int {
 }
 
 func (s SchlubID) NextSchlub() SchlubID {
+	// Keep the kind id as well.
+	kindID := (int(s) >> 9) & 0x7
 	// Keep the 9-bit family id and increment the 10-bit schlub id
 	schlubID := (int(s) >> 12) & 0x3FF
 	schlubID++
 	if schlubID > 1023 {
 		schlubID = 0
 	}
-	return SchlubID((int(s) & 0xFFC00000) | (schlubID << 12))
+	return SchlubID((int(s) & 0xFFFFF000) | (schlubID << 12) | (kindID << 9))
 }
 
 // NextSchlubs returns count new schlub IDs from the start of the schlub ID. If the original schlub ID should change, assign it to the last schlub returned.

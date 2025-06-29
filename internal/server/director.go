@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	MobTick           = 30
+	MobTick           = 90
 	ResourceTick      = 60
 	MaxSchlubsToSpawn = 100
+	MobStartingCount  = 200
 )
 
 type Timers struct {
@@ -35,35 +36,29 @@ func NewDirector(t *Table) *Director {
 }
 
 func (d *Director) Setup() {
-	// Create a fake mob a distance away to test mob visibility.
-	t := d.table
-	fam := t.FamilyID.NextFamily()
-	t.FamilyID = fam.NextSchlub()
-	mob := t.Continent.NewMob(2, t.mobID.Next(), 300, 300)
-	mob.AddSchlub(fam)
-
-	fam = t.FamilyID.NextFamily()
-	schlubs := fam.NextSchlubs(50)
-	t.FamilyID = schlubs[len(schlubs)-1]
-	mob = t.Continent.NewMob(2, t.mobID.Next(), 200, 200)
-	mob.AddSchlub(schlubs...)
+	for range MobStartingCount {
+		d.AddMobs()
+	}
 }
 
 func (d *Director) GetSpawnPosition() (float64, float64) {
 	return rand.Float64() * world.ContinentPixelSpan, rand.Float64() * world.ContinentPixelSpan
 }
 func (d *Director) AddMobs() {
+	// Spawn a family unit.
 	t := d.table
-	mobSchlubCount := int(rand.Float64()*MaxSchlubsToSpawn) + 1
+	mobSchlubCount := d.table.Continent.Fate.NumGen.Intn(4) + 1
 	posX, posY := d.GetSpawnPosition()
 
 	fam := t.FamilyID.NextFamily()
+	fam.SetKindID(int(world.SchlubKindVagrant)) // Set the kind to Vagrant for all random spawns.
 	schlubs := fam.NextSchlubs(mobSchlubCount)
-	d.table.FamilyID = schlubs[len(schlubs)-1]
+	t.FamilyID = schlubs[len(schlubs)-1]
 
-	mob := t.Continent.NewMob(2, t.mobID.Next(), posX, posY)
+	mob := t.Continent.NewMob(0, t.mobID.Next(), posX, posY)
+	mob.OuterKind = world.SchlubKindVagrant // Set the outer kind to Vagrant for all random spawns.
 	mob.AddSchlub(schlubs...)
-	t.log.Debug("added mob", "id", mob.ID, "position", posX, posY, "schlubs", len(mob.Schlubs))
+	t.log.Debug("added mob", "id", mob.ID, "x", posX, "y", posY, "schlubs", len(mob.Schlubs))
 }
 
 func (d *Director) Update() {
@@ -71,7 +66,7 @@ func (d *Director) Update() {
 	d.timers.resourceTimer++
 
 	if d.timers.mobTimer >= MobTick {
-		// d.AddMobs()
+		d.AddMobs()
 		d.timers.mobTimer = 0
 	}
 

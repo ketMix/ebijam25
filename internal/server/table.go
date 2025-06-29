@@ -74,7 +74,8 @@ func (t *Table) Loop() {
 			defer cancel()
 
 			// Create a new mob for the player.
-			mob := t.Continent.NewMob(player.ID, t.mobID.Next(), world.ContinentPixelSpan/2, world.ContinentPixelSpan/2)
+			x, y := t.director.GetSpawnPosition()
+			mob := t.Continent.NewMob(player.ID, t.mobID.Next(), x, y)
 			player.MobID = mob.ID // Assign the mob ID to the player
 
 			// Add a some schlubs.
