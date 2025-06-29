@@ -40,6 +40,7 @@ func (g *Game) Setup() {
 	g.cammie.Setup()
 	g.EventBus = *event.NewBus("client")
 	g.continentImage = ebiten.NewImage(world.ContinentPixelSpan, world.ContinentPixelSpan)
+	PlayAudio("music")
 
 	// **** Event -> local state change hooks.
 	g.EventBus.Subscribe((event.MetaJoin{}).Type(), func(e event.Event) {
@@ -366,6 +367,10 @@ func (g *Game) Update() error {
 	// Update schlubs
 	for _, ps := range g.schlubSystem {
 		ps.Update(float64(g.State.Tickrate))
+	}
+	// Loops
+	if !AudioPlaying() {
+		PlayAudio("music")
 	}
 	return nil
 }

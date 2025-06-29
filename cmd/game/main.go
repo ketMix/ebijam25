@@ -8,6 +8,9 @@ import (
 )
 
 func main() {
+	if err := stuff.LoadAudio(); err != nil {
+		panic(err)
+	}
 	// It's a great game we've developed here...!!!
 	g := game.NewGame(false) // Oops, didn't mean to commit being local-only
 

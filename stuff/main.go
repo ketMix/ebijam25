@@ -3,6 +3,7 @@ package stuff
 import (
 	"bytes"
 	"embed"
+	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -75,4 +76,39 @@ func LoadNames() error {
 // GetName do be getting a name by number, tho. It modulo wraps.
 func GetName(num int) string {
 	return names[num%len(names)]
+}
+
+//go:embed audio/*.ogg
+var audio embed.FS
+var Audio map[string][]byte
+
+func LoadAudio() error {
+	Audio = make(map[string][]byte)
+	files, err := audio.ReadDir("audio")
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		data, err := audio.ReadFile("audio/" + file.Name())
+		if err != nil {
+			return err
+		}
+		name := file.Name()
+		name = name[:len(name)-len(".ogg")]
+		fmt.Println("Loading audio:", name)
+		Audio[name] = data
+	}
+
+	return nil
+}
+
+func GetAudio(name string) []byte {
+	if audioData, ok := Audio[name]; ok {
+		return audioData
+	}
+	return nil
 }
