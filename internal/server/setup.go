@@ -37,11 +37,12 @@ func (t *Table) Setup() {
 					case world.SchlubKindVagrant:
 						baseDamage = 1
 					}
-					if baseDamage < 0 {
+					fmt.Println("Mob collision detected:", mob.ID, "with", other.ID, "base damage:", baseDamage)
+					/*if baseDamage < 0 {
 						// Convert schlubs from the other mob to this one.
 						count := -baseDamage
-						if len(other.Schlubs) < count {
-							count = len(other.Schlubs)
+						if count >= len(other.Schlubs) {
+							count = len(other.Schlubs) - 1
 						}
 						if count > 0 {
 							// Convert schlubs from the other mob to this one.
@@ -50,7 +51,7 @@ func (t *Table) Setup() {
 								schlubIDs = append(schlubIDs, int(other.Schlubs[i]))
 							}
 							other.Schlubs = other.Schlubs[count:]
-							mob.Schlubs = append(mob.Schlubs, other.Schlubs[:count]...)
+							mob.Schlubs = append(mob.Schlubs, other.Schlubs[:count-1]...)
 							t.State.EventBus.Publish(&event.MobConvert{
 								From: other.ID,
 								To:   mob.ID,
@@ -81,7 +82,7 @@ func (t *Table) Setup() {
 							ID: other.ID,
 						})
 						// TODO: Maybe we should also check if the player has any mobs left.
-					}
+					}*/
 				}
 			}
 		}
