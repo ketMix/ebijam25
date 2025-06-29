@@ -159,7 +159,14 @@ func (m *Mob) Radius() float64 {
 	if len(m.Schlubs) == 0 {
 		return 10
 	}
-	return math.Max(12, float64(len(m.Schlubs))*1.5)
+	return math.Max(12, float64(len(m.Schlubs))*4)
+}
+
+func (m *Mob) CombatRadius() float64 {
+	if len(m.Schlubs) == 0 {
+		return 10
+	}
+	return math.Max(12, math.Log(float64(len(m.Schlubs)))*20)
 }
 
 func (m *Mob) Speed() float64 {
@@ -184,7 +191,7 @@ func (m *Mob) Spread() float64 {
 
 // Vision returns the mob's vision radius.
 func (m *Mob) Vision() float64 {
-	vision := math.Max(200, math.Log(m.Radius())*100)
+	vision := math.Max(200, math.Log(m.Radius())*50)
 	return vision
 }
 

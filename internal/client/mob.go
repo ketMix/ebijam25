@@ -23,7 +23,7 @@ func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob, simple bool) {
 		ps.Draw(screen, !simple) // just for now
 	} else {
 		// Fallback to simple circle if no particle system
-		radius := mob.Radius()
+		radius := mob.CombatRadius()
 		vector.DrawFilledCircle(screen, float32(mob.X), float32(mob.Y), float32(radius), mob.Color, true)
 		// Draw schlub count
 		countText := fmt.Sprintf("%d", len(mob.Schlubs))
@@ -33,6 +33,9 @@ func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob, simple bool) {
 	// Draw vision circle for local player
 	if mob.ID == g.MobID {
 		vision := mob.Vision()
-		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 1, color.NRGBA{0, 255, 0, 32}, false)
+		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 4, color.NRGBA{0, 0, 255, 64}, false)
 	}
+
+	// Also draw a "combat" circle for any mob.
+	vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(mob.CombatRadius()), 4, color.NRGBA{255, 0, 0, 128}, false)
 }
