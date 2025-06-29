@@ -119,7 +119,7 @@ func (d *Dialoggies) Next() {
 				Width:           "60%",
 				Height:          "210",
 				ForegroundColor: "white",
-				BackgroundColor: "#444444",
+				BackgroundColor: "#00000077",
 				TextWrap:        rebui.WrapWord,
 				Text:            top.runningMessage,
 				/*VerticalAlign:   rebui.AlignMiddle,
