@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	FloatScale       float64 = 7.0
-	MaxSchlubsPerMob int     = 1000 // Max number of schlubs in a mob
+	MaxSchlubsPerMob int = 1000 // Max number of schlubs in a mob
 )
 
 // Mobs is a slice of mobbies, yo.
@@ -75,7 +74,7 @@ type Mob struct {
 
 // Update does Mob logic, woo
 func (m *Mob) Update(state *State) {
-	speed := 0.7 * float64(state.Tickrate)
+	speed := m.Speed() // * float64(state.Tickrate)
 
 	// If we're a "barbarian" mob (OwnerID == 0), we don't have a target.
 	if m.OwnerID == 0 {
@@ -136,9 +135,7 @@ func (m *Mob) Update(state *State) {
 			y = m.TargetY
 		}
 
-		intX := int(x * FloatScale)
-		intY := int(y * FloatScale)
-		state.EventBus.Publish(&event.MobPosition{ID: m.ID, X: intX, Y: intY})
+		state.EventBus.Publish(&event.MobPosition{ID: m.ID, X: x, Y: y})
 	}
 }
 
@@ -160,9 +157,18 @@ func (m *Mob) RemoveSchlub(schlub ...SchlubID) {
 // Radius calculates the radius of the mob based on the number of constituents.
 func (m *Mob) Radius() float64 {
 	if len(m.Schlubs) == 0 {
-		return 1
+		return 10
 	}
-	return float64(len(m.Schlubs)) * 0.1
+	return math.Max(12, float64(len(m.Schlubs))*0.1)
+}
+
+func (m *Mob) Speed() float64 {
+	// Faster the smaller you be.
+	if len(m.Schlubs) == 0 {
+		return 1.0 // Default speed for empty mob
+	}
+	speed := math.Max(0.1, 1.0/(float64(len(m.Schlubs))/10.0))
+	return speed
 }
 
 func (m *Mob) Spread() float64 {

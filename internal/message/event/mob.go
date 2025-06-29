@@ -29,10 +29,10 @@ func (m MobSplit) Type() string {
 
 // MobMove represents an event where a mob begins to move to a new position.
 type MobMove struct {
-	ID       int `json:"id"`        // ID of the mob moving
-	TargetID int `json:"target_id"` // ID of the target mob (if applicable)
-	X        int `json:"x"`
-	Y        int `json:"y"`
+	ID       int     `json:"id"`        // ID of the mob moving
+	TargetID int     `json:"target_id"` // ID of the target mob (if applicable)
+	X        float64 `json:"x"`
+	Y        float64 `json:"y"`
 }
 
 // Type returns the type of the MobMove event.
@@ -42,9 +42,9 @@ func (m MobMove) Type() string {
 
 // MobPosition represents the position of a mob on the map.
 type MobPosition struct {
-	ID int `json:"id"` // ID of the mob
-	X  int `json:"x"`
-	Y  int `json:"y"`
+	ID int     `json:"id"` // ID of the mob
+	X  float64 `json:"x"`
+	Y  float64 `json:"y"`
 }
 
 // Type returns the type of the MobPosition event.
@@ -54,10 +54,10 @@ func (m MobPosition) Type() string {
 
 // MobSpawn represents an event where a new mob is spawned at a specific location. It is required that schlubs are created prior to this event.
 type MobSpawn struct {
-	ID    int `json:"id"`    // ID of the spawned mob
-	Owner int `json:"owner"` // ID of the owner (player) of the mob
-	X     int `json:"x"`
-	Y     int `json:"y"`
+	ID    int     `json:"id"`    // ID of the spawned mob
+	Owner int     `json:"owner"` // ID of the owner (player) of the mob
+	X     float64 `json:"x"`
+	Y     float64 `json:"y"`
 	// FIXME: This will not be cloned properly in Decode.
 	Schlubs   []int `json:"schlubs"`         // IDs of schlubs associated with the mob
 	OuterKind int   `json:"outer,omitempty"` // Optional outer kind of the mob, used for formation
