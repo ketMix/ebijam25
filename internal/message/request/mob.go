@@ -37,7 +37,7 @@ func (f Formation) Type() string {
 
 // Construct represents a request to construct a specific type of structure.
 type Construct struct {
-	Structure string `json:"structure"` // Type of structure to construct (e.g., "monastery", "barracks")
+	Caravan int `json:"caravan"` // Caravan to construct -- see last 3 schlub kinds.
 }
 
 // Type returns the type of the Construct request.

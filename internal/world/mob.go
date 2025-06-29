@@ -102,10 +102,10 @@ func (m *Mob) Update(state *State) {
 		// Eh, let's wander randomly if we don't have a target.
 		if m.TargetID == 0 {
 			m.lastWanderTick++
-			if m.lastWanderTick > 60 {
+			if m.lastWanderTick > 40 {
 				m.lastWanderTick = 0
-				m.TargetX = m.X + (state.Continent.Fate.NumGen.Float64()*2-1)*speed
-				m.TargetY = m.Y + (state.Continent.Fate.NumGen.Float64()*2-1)*speed
+				m.TargetX = m.X + (state.Continent.Fate.NumGen.Float64()*10)*speed
+				m.TargetY = m.Y + (state.Continent.Fate.NumGen.Float64()*10)*speed
 			}
 		}
 	}
