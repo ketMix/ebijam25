@@ -77,7 +77,20 @@ func (t *Table) Loop() {
 			fam.SetKindID(int(world.SchlubKindPlayer)) // Set the kind to Player
 			mob.AddSchlub(fam)
 
-			kindId := int(world.SchlubKindVagrant)
+			// Perhaps a little unfair (due to some people getting' ROBBED), but let's give a few random schlubs to the player.
+			for range 4 {
+				if t.Continent.Fate.NumGen.Intn(100) < 50 { // 50% chance to add a random schlub
+					if t.Continent.Fate.NumGen.Intn(100) < 50 { // 50% chance for it to be from a diff. fam.
+						fam = fam.NextFamily()
+					} else {
+						fam = fam.NextSchlub() // Just get the next schlub in the same family
+					}
+					fam.SetKindID(int(world.SchlubKindVagrant)) // Set the kind to Vagrant
+					mob.AddSchlub(fam)
+				}
+			}
+
+			/*kindId := int(world.SchlubKindVagrant)
 			for range debugSpawn {
 				fam = fam.NextSchlub()
 				fam.SetKindID(kindId)
@@ -86,7 +99,7 @@ func (t *Table) Loop() {
 				if kindId > int(world.SchlubKindWarrior) {
 					kindId = int(world.SchlubKindVagrant)
 				}
-			}
+			}*/
 
 			welcome, _ := message.Encode(&event.MetaWelcome{
 				Username: player.Username,
