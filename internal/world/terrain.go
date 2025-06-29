@@ -10,6 +10,7 @@ const (
 	TerrainNone Terrain = iota
 	TerrainDirt
 	TerrainGrass
+	TerrainRockyGrass
 	TerrainRockyDirt
 	TerrainSand
 	TerrainWater
@@ -32,6 +33,8 @@ func (t Terrain) ImageName() string {
 		return "dirt"
 	case TerrainGrass:
 		return "grass"
+	case TerrainRockyGrass:
+		return "grassy-rocks"
 	case TerrainRockyDirt:
 		return "rocky-dirt"
 	case TerrainSand:
@@ -51,6 +54,8 @@ func (t Terrain) String() string {
 		return "Dirt"
 	case TerrainGrass:
 		return "Grass"
+	case TerrainRockyGrass:
+		return "Rocky Grass"
 	case TerrainRockyDirt:
 		return "Rocky Dirt"
 	case TerrainSand:
@@ -124,6 +129,9 @@ func getTerrain(elevation, temperature, moisture float64) Terrain {
 	}
 
 	if moisture > 0.4 {
+		if elevation > 0.7 {
+			return TerrainRockyGrass
+		}
 		return TerrainGrass
 	}
 	return TerrainDirt
