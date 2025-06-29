@@ -61,8 +61,9 @@ func LoadNames() error {
 	if err != nil {
 		return err
 	}
-	// Split strings by CRLF.
-	for _, line := range bytes.Split(data, []byte{'\r', '\n'}) {
+	// Split strings.
+	for _, line := range bytes.Split(data, []byte{'\n'}) {
+		line = bytes.TrimSpace(line)
 		if len(line) > 0 {
 			names = append(names, string(line))
 		}
