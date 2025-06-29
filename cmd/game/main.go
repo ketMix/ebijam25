@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// It's a great game we've developed here...!!!
-	g := game.NewGame(true)
+	g := game.NewGame(false) // Oops, didn't mean to commit being local-only
 
 	tm := &transitions.Manager{}
 	g.Managers.Add(tm)
