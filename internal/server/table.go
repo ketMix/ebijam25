@@ -70,7 +70,7 @@ func (t *Table) Loop() {
 		case player := <-t.playerAdd:
 			t.AddPlayer(player)
 			// Send a welcome message to the new player.
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 			defer cancel()
 
 			// Create a new mob for the player.
@@ -206,7 +206,7 @@ func (t *Table) AddPlayer(player *Player) {
 			fmt.Println("error encoding message:", err)
 			return
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 		defer cancel()
 		err = player.conn.Write(ctx, websocket.MessageText, data)
 		if err != nil {
@@ -218,7 +218,7 @@ func (t *Table) AddPlayer(player *Player) {
 	// It's a bit crap, but we need to spawn a new goroutine for each player.
 	go func() {
 		for {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 			player.cancel = cancel // Store the cancel function in the player struct
 			kind, data, err := player.conn.Read(ctx)
 			if err != nil {
