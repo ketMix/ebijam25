@@ -27,7 +27,7 @@ func PlayAudio(name string) {
 	if err != nil {
 		return
 	}
-	audioPlayer, err = audio.NewPlayer(audioContext, s)
+	audioPlayer, err = audioContext.NewPlayer(s)
 	if err != nil {
 		return
 	}
