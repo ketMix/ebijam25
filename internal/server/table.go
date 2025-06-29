@@ -56,6 +56,15 @@ func (t *Table) Loop() {
 	// Process player additions
 	for t.running {
 		select {
+		case <-t.close:
+			t.log.Info("table closed")
+			t.running = false
+			// Boot all players from the table.
+			for _, player := range t.players {
+				player.conn.Close(websocket.StatusNormalClosure, "table closed")
+			}
+			// FIXME: This should just get players into a new table.
+			return // Exit the loop if the table is closed
 		case msg := <-t.playerMessages:
 			t.EventBus.Publish(&msg) // Publish the message to the event bus
 		case player := <-t.playerAdd:
@@ -120,6 +129,10 @@ func (t *Table) Loop() {
 					})
 					player.conn.Write(ctx, websocket.MessageText, joinEvent)
 				}
+			}
+			// Mark the table as closed in there are 15+ players.
+			if len(t.players) >= 15 {
+				t.open = false // Close the table for new players
 			}
 		case player := <-t.playerLeave:
 			// Handle player leaving the table
@@ -224,6 +237,13 @@ func (t *Table) AddPlayer(player *Player) {
 				player: player,
 				msg:    msg,
 			}
+		}
+
+		// Yeet the table if there are no players left and we closed it.
+		if len(t.players) == 0 && !t.open {
+			t.close <- true // Signal the table to close
+			t.log.Info("table closed due to no players")
+			return
 		}
 
 		t.playerLeave <- player // Notify the table that the player is leaving
