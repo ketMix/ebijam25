@@ -101,16 +101,19 @@ func (g *polarGrid) getNeighborIndices(angle, distance float64) []int {
 }
 
 type Schlubs struct {
-	schlubs         []*Schlub
-	mob             *world.Mob
-	time            float64
-	playerImage     *ebiten.Image
-	vagrantImage    *ebiten.Image
-	monkImage       *ebiten.Image
-	warriorImage    *ebiten.Image
-	grid            *polarGrid
-	outerSchlubKind world.SchlubID
-	outerRadius     float64
+	schlubs             []*Schlub
+	mob                 *world.Mob
+	time                float64
+	playerImage         *ebiten.Image
+	vagrantImage        *ebiten.Image
+	monkImage           *ebiten.Image
+	warriorImage        *ebiten.Image
+	monkCaravanImage    *ebiten.Image
+	warriorCaravanImage *ebiten.Image
+	vagrantCaravanImage *ebiten.Image
+	grid                *polarGrid
+	outerSchlubKind     world.SchlubID
+	outerRadius         float64
 
 	toRemove []int
 }
@@ -123,6 +126,14 @@ func getSchlubImage(kind int) *ebiten.Image {
 		img = stuff.GetImage("warrior")
 	} else if kind == int(world.SchlubKindPlayer) {
 		img = stuff.GetImage("player")
+	} else if kind == int(world.SchlubKindCaravanMonk) {
+		img = stuff.GetImage("cart-monke")
+	} else if kind == int(world.SchlubKindCaravanWarrior) {
+		img = stuff.GetImage("cart-fighter")
+	} else if kind == int(world.SchlubKindCaravanVagrant) {
+		img = stuff.GetImage("cart-vagrant")
+	} else {
+		img = stuff.GetImage("vagrant") // Default to vagrant if unknown kind
 	}
 	if img == nil {
 		img = stuff.GetImage("vagrant") // Default to vagrant if unknown kind
@@ -132,15 +143,18 @@ func getSchlubImage(kind int) *ebiten.Image {
 
 func NewSchlubs(mob *world.Mob) *Schlubs {
 	s := &Schlubs{
-		mob:             mob,
-		schlubs:         make([]*Schlub, 0, len(mob.Schlubs)),
-		playerImage:     getSchlubImage(int(world.SchlubKindPlayer)),
-		vagrantImage:    getSchlubImage(int(world.SchlubKindVagrant)),
-		monkImage:       getSchlubImage(int(world.SchlubKindMonk)),
-		warriorImage:    getSchlubImage(int(world.SchlubKindWarrior)),
-		grid:            newPolarGrid(),
-		toRemove:        make([]int, 0, 32),
-		outerSchlubKind: world.SchlubKindVagrant, // Start with vagrant
+		mob:                 mob,
+		schlubs:             make([]*Schlub, 0, len(mob.Schlubs)),
+		playerImage:         getSchlubImage(int(world.SchlubKindPlayer)),
+		vagrantImage:        getSchlubImage(int(world.SchlubKindVagrant)),
+		monkImage:           getSchlubImage(int(world.SchlubKindMonk)),
+		warriorImage:        getSchlubImage(int(world.SchlubKindWarrior)),
+		monkCaravanImage:    getSchlubImage(int(world.SchlubKindCaravanMonk)),
+		warriorCaravanImage: getSchlubImage(int(world.SchlubKindCaravanWarrior)),
+		vagrantCaravanImage: getSchlubImage(int(world.SchlubKindCaravanVagrant)),
+		grid:                newPolarGrid(),
+		toRemove:            make([]int, 0, 32),
+		outerSchlubKind:     world.SchlubKindVagrant, // Start with vagrant
 	}
 
 	if len(s.mob.Schlubs) == 0 {
@@ -468,6 +482,12 @@ func (s *Schlubs) Draw(screen *ebiten.Image, showNames bool) {
 			screen.DrawImage(s.warriorImage, op)
 		} else if p.ID.KindID() == int(world.SchlubKindPlayer) {
 			screen.DrawImage(s.playerImage, op)
+		} else if p.ID.KindID() == int(world.SchlubKindCaravanMonk) {
+			screen.DrawImage(s.monkCaravanImage, op)
+		} else if p.ID.KindID() == int(world.SchlubKindCaravanWarrior) {
+			screen.DrawImage(s.warriorCaravanImage, op)
+		} else if p.ID.KindID() == int(world.SchlubKindCaravanVagrant) {
+			screen.DrawImage(s.vagrantCaravanImage, op)
 		} else {
 			screen.DrawImage(s.vagrantImage, op)
 		}
