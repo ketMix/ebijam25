@@ -245,6 +245,19 @@ func (g *Game) Setup() {
 			g.log.Warn("mob convert event received but from mob not found", "from", evt.From)
 		}
 	})
+	g.EventBus.Subscribe((event.MobCreate{}).Type(), func(e event.Event) {
+		evt := e.(*event.MobCreate)
+		var schlubs []world.SchlubID
+		for _, id := range evt.IDs {
+			schlubs = append(schlubs, world.SchlubID(id))
+		}
+		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
+			mob.AddSchlub(schlubs...)
+			if ss, ok := g.schlubSystem[evt.ID]; ok {
+				ss.AddSchlubs(schlubs...)
+			}
+		}
+	})
 
 	// **** Request -> network send hooks.
 	g.EventBus.Subscribe((request.Move{}).Type(), func(e event.Event) {
@@ -289,6 +302,19 @@ func (g *Game) Update() error {
 			// Request a formation change for the player's mob.
 			g.EventBus.Publish(&request.Formation{
 				// Not populating for now...
+			})
+		}
+		if inpututil.IsKeyJustPressed(ebiten.Key1) {
+			g.EventBus.Publish(&request.Construct{
+				Caravan: int(world.SchlubKindCaravanVagrant),
+			})
+		} else if inpututil.IsKeyJustPressed(ebiten.Key2) {
+			g.EventBus.Publish(&request.Construct{
+				Caravan: int(world.SchlubKindCaravanMonk),
+			})
+		} else if inpututil.IsKeyJustPressed(ebiten.Key3) {
+			g.EventBus.Publish(&request.Construct{
+				Caravan: int(world.SchlubKindCaravanWarrior),
 			})
 		}
 

@@ -250,6 +250,25 @@ func (s *Schlubs) RemoveSchlubs(schlubs ...world.SchlubID) {
 	s.toRemove = s.toRemove[:0] // Clear the slice for next use
 }
 
+func (s *Schlubs) AddSchlubs(schlub ...world.SchlubID) {
+	for _, id := range schlub {
+		// Just add to our mob center.
+		dx := s.mob.X
+		dy := s.mob.Y
+		distance := math.Sqrt(dx*dx + dy*dy)
+		angle := math.Atan2(dy, dx)
+
+		newSchlub := &Schlub{
+			Schlub: world.Schlub{
+				ID: id,
+			},
+			Distance: distance,
+			Angle:    angle,
+		}
+		s.schlubs = append(s.schlubs, newSchlub)
+	}
+}
+
 // PersuadeSchlub adds an existing schlub from another mob
 func (s *Schlubs) PersuadeSchlubs(gullySchlubs []*world.Schlub) {
 	if len(s.schlubs) >= world.MaxSchlubsPerMob {

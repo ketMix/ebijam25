@@ -78,6 +78,17 @@ func (m MobDespawn) Type() string {
 	return "mob-despawn"
 }
 
+// MobCreate adds the given schlubs to a mob.
+type MobCreate struct {
+	ID  int   `json:"id"`
+	IDs []int `json:"schlubs"`
+}
+
+// Type returns garbage.
+func (m MobCreate) Type() string {
+	return "mob-create"
+}
+
 // MobDamage represents an even where a mob taks some damage, yo.
 type MobDamage struct {
 	ID         int   `json:"id"`          // ID of the mob taking damage
@@ -123,4 +134,5 @@ func init() {
 	message.Register(&MobDamage{})
 	message.Register(&MobConvert{})
 	message.Register(&MobFormation{})
+	message.Register(&MobCreate{})
 }

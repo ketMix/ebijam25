@@ -168,6 +168,25 @@ func (t *Table) Setup() {
 			} else {
 				t.log.Warn("formation request received but mob not found", "mobID", msg.player.MobID)
 			}
+		case *request.Construct:
+			if evt.Caravan >= int(world.SchlubKindCaravanVagrant) && evt.Caravan <= int(world.SchlubKindCaravanWarrior) {
+				if mob := t.Continent.Mobs.FindByID(msg.player.MobID); mob != nil {
+
+					// Add a some schlubs.
+					fam := t.FamilyID.NextSchlub()
+					t.FamilyID = fam
+
+					// Start with the player.
+					fam.SetKindID(evt.Caravan) // Set the kind to Player
+					mob.AddSchlub(fam)
+
+					response := &event.MobCreate{
+						ID:  msg.player.MobID,
+						IDs: []int{int(fam)},
+					}
+					t.SendVisibleMobEvent(mob, response)
+				}
+			}
 		}
 	})
 
