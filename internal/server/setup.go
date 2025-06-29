@@ -130,6 +130,20 @@ func (t *Table) Setup() {
 			})
 		}
 	})
+	t.EventBus.Subscribe((event.MobCreate{}).Type(), func(e event.Event) {
+		evt := e.(*event.MobCreate)
+		// Just send it.
+		if mob := t.Continent.Mobs.FindByID(evt.ID); mob != nil {
+			// Add the new schlubs to the mob.
+			for _, id := range evt.IDs {
+				mob.AddSchlub(world.SchlubID(id))
+			}
+			// Send the spawn event to all players that can see the mob.
+			t.SendVisibleMobEvent(mob, evt)
+		} else {
+			t.log.Warn("mob create event received but mob not found", "id", evt.ID)
+		}
+	})
 
 	// Subscribe to per-player messages. These are generated from the websockets listen loop for a given player connection.
 	t.EventBus.Subscribe((PlayerMessage{}).Type(), func(e event.Event) {

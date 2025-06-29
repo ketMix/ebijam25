@@ -257,6 +257,8 @@ func (g *Game) Setup() {
 			if ss, ok := g.schlubSystem[evt.ID]; ok {
 				ss.AddSchlubs(schlubs...)
 			}
+		} else {
+			g.log.Warn("mob create event received but mob not found", "id", evt.ID)
 		}
 	})
 

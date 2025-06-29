@@ -2,6 +2,7 @@ package world
 
 import (
 	"fmt"
+	"image/color"
 	"math"
 )
 
@@ -47,6 +48,7 @@ func NewContinent(sneed uint) *Continent {
 func (c *Continent) NewMob(owner ID, id ID, x, y float64) *Mob {
 	mob := &Mob{
 		OwnerID: owner,
+		Color:   color.NRGBA{255, 255, 255, 255}, // Just a default for barbarians.
 		ID:      id,
 		X:       x,
 		Y:       y,
