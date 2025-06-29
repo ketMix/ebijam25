@@ -16,6 +16,7 @@ const (
 	TerrainRockyDirt
 	TerrainRockySand
 	TerrainSand
+	TerrainSandyDirt
 	TerrainRocks
 	TerrainWater
 	TerrainPines
@@ -49,6 +50,8 @@ func (t Terrain) ImageName() string {
 		return "rocky-sand"
 	case TerrainSand:
 		return "sand"
+	case TerrainSandyDirt:
+		return "sandy-dirt"
 	case TerrainRocks:
 		return "rocks"
 	case TerrainWater:
@@ -80,6 +83,8 @@ func (t Terrain) String() string {
 		return "Rocks"
 	case TerrainSand:
 		return "Sand"
+	case TerrainSandyDirt:
+		return "Sandy Dirt"
 	case TerrainWater:
 		return "Water"
 	case TerrainPines:
