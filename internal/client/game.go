@@ -165,6 +165,14 @@ func (g *Game) Setup() {
 			g.Continent.RemoveMob(mob)
 			// Remove particle system
 			delete(g.schlubSystem, mob.ID)
+			if mob.ID == g.MobID || mob.OwnerID == g.PlayerID {
+				g.Dialoggies.Add("Death", "A shame you didn't survive!\n\nMake sure to build caravans as needed and change formation!\n\nRestart to hopefully play again.", []string{"OK"}, func(s string) {
+					g.Dialoggies.dialogs = g.Dialoggies.dialogs[1:] // Remove the dialog from the stack.
+					g.Dialoggies.layout.ClearEvents()
+					g.Dialoggies.Next()
+				})
+			}
+
 			g.log.Debug("mob despawned", "id", evt.ID)
 		} else {
 			g.log.Warn("mob despawned but not found", "id", evt.ID)
@@ -256,6 +264,13 @@ func (g *Game) Setup() {
 			mob.AddSchlub(schlubs...)
 			if ss, ok := g.schlubSystem[evt.ID]; ok {
 				ss.AddSchlubs(schlubs...)
+			}
+			if (mob.ID == g.MobID || mob.OwnerID == g.PlayerID) && len(mob.Schlubs) >= 600 {
+				g.Dialoggies.Add("Win", "What a victory!\n\nRestart to maybe play again.", []string{"OK"}, func(s string) {
+					g.Dialoggies.dialogs = g.Dialoggies.dialogs[1:] // Remove the dialog from the stack.
+					g.Dialoggies.layout.ClearEvents()
+					g.Dialoggies.Next()
+				})
 			}
 		} else {
 			g.log.Warn("mob create event received but mob not found", "id", evt.ID)
