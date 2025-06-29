@@ -254,8 +254,8 @@ func (g *Game) Setup() {
 		}
 		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
 			mob.AddSchlub(schlubs...)
-			if _, ok := g.schlubSystem[mob.ID]; !ok {
-				g.schlubSystem[mob.ID] = NewSchlubs(mob)
+			if ss, ok := g.schlubSystem[evt.ID]; ok {
+				ss.AddSchlubs(schlubs...)
 			}
 		}
 	})
