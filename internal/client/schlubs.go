@@ -6,7 +6,6 @@ import (
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/ketMix/ebijam25/internal/world"
 	"github.com/ketMix/ebijam25/stuff"
 )
@@ -429,7 +428,8 @@ func (s *Schlubs) UpdateMob(serverRate float64) {
 	if s.mob == nil || s.mob.TargetX == s.mob.X || s.mob.TargetY == s.mob.Y {
 		return
 	}
-	m := s.mob
+	// Disable interp for now, sped up server 2x to compensate, we'll see if that is a bad idea.
+	/*m := s.mob
 	angleToTarget := math.Atan2(m.TargetY-m.Y, m.TargetX-m.X)
 	dx := math.Cos(angleToTarget)
 	dy := math.Sin(angleToTarget)
@@ -442,7 +442,7 @@ func (s *Schlubs) UpdateMob(serverRate float64) {
 		x = m.TargetY
 	}
 	m.X = x
-	m.Y = y
+	m.Y = y*/
 }
 
 func (s *Schlubs) Update(serverRate float64) {
@@ -472,9 +472,9 @@ func (s *Schlubs) Draw(screen *ebiten.Image, showNames bool) {
 			screen.DrawImage(s.vagrantImage, op)
 		}
 		// For now... we really need to use fate or something to get an offset start.
-		if showNames {
+		/*if showNames {
 			name := p.GetName() + " " + p.FamilyName()
 			ebitenutil.DebugPrintAt(screen, name, int(x), int(y))
-		}
+		}*/
 	}
 }

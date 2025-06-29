@@ -167,7 +167,11 @@ func (m *Mob) Speed() float64 {
 	if len(m.Schlubs) == 0 {
 		return 1.0 // Default speed for empty mob
 	}
-	speed := math.Max(0.1, 1.0/(float64(len(m.Schlubs))/10.0))
+	// Every 50 schlubs, we reduce speed by 0.01
+	speed := 1.0 - (float64(len(m.Schlubs))/50)*0.01
+	if speed < 0.1 {
+		speed = 0.1 // Minimum speed
+	}
 	return speed
 }
 
