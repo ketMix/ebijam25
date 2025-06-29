@@ -51,8 +51,8 @@ func NewTable(id world.ID) *Table {
 
 // Loop is our table's loop that runs in a goroutine. It receives new players, player leaves, player messages, and runs the table's update function at a fixed tickrate.
 func (t *Table) Loop() {
-	t.Tickrate = 10                            // FIXME
-	ticker := time.NewTicker(time.Second / 10) // 10 ticks per second
+	t.Tickrate = 20                            // FIXME
+	ticker := time.NewTicker(time.Second / 20) // 20 ticks per second
 	// Process player additions
 	for t.running {
 		select {
