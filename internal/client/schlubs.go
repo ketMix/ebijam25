@@ -264,21 +264,28 @@ func (s *Schlubs) RemoveSchlubs(schlubs ...world.SchlubID) {
 }
 
 func (s *Schlubs) AddSchlubs(schlub ...world.SchlubID) {
-	for _, id := range schlub {
-		// Just add to our mob center.
-		dx := s.mob.X
-		dy := s.mob.Y
-		distance := math.Sqrt(dx*dx + dy*dy)
-		angle := math.Atan2(dy, dx)
+	for i, id := range schlub {
+		spiralIndex := float64(i)
+		// Golden angle for even distribution
+		angle := spiralIndex * 2.39
 
-		newSchlub := &Schlub{
+		baseDistance := math.Sqrt(spiralIndex) * SchlubDiameter * 0.8
+		jitter := (rand.Float64() - 0.5) * SchlubRadius * 0.5
+		distance := baseDistance + jitter
+
+		maxDistance := s.mob.Radius() - SchlubRadius
+		if distance > maxDistance {
+			distance = maxDistance
+			angle += rand.Float64() * 0.5
+		}
+
+		s.schlubs = append(s.schlubs, &Schlub{
 			Schlub: world.Schlub{
 				ID: id,
 			},
 			Distance: distance,
 			Angle:    angle,
-		}
-		s.schlubs = append(s.schlubs, newSchlub)
+		})
 	}
 }
 
