@@ -159,7 +159,7 @@ func (m *Mob) Radius() float64 {
 	if len(m.Schlubs) == 0 {
 		return 10
 	}
-	return math.Max(12, float64(len(m.Schlubs))*0.1)
+	return math.Max(12, float64(len(m.Schlubs))*1.5)
 }
 
 func (m *Mob) Speed() float64 {
