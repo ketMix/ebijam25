@@ -43,8 +43,9 @@ const (
 	SchlubKindVagrant
 	SchlubKindMonk
 	SchlubKindWarrior
-	SchlubKindBuilding
-	SchlubKindMobile
+	SchlubKindCaravanVagrant
+	SchlubKindCaravanMonk
+	SchlubKindCaravanWarrior
 )
 
 func (s SchlubID) String() string {
