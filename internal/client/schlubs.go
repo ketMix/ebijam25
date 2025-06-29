@@ -123,7 +123,7 @@ func getSchlubImage(kind int) *ebiten.Image {
 	if kind == int(world.SchlubKindMonk) {
 		img = stuff.GetImage("monke")
 	} else if kind == int(world.SchlubKindWarrior) {
-		img = stuff.GetImage("warrior")
+		img = stuff.GetImage("fighter")
 	} else if kind == int(world.SchlubKindPlayer) {
 		img = stuff.GetImage("player")
 	} else if kind == int(world.SchlubKindCaravanMonk) {
