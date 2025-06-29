@@ -65,6 +65,7 @@ type Mob struct {
 	ID               ID
 	Color            color.NRGBA // Color of the mob in NRGBA format, this is duplicated from the owning player.
 	X, Y             float64     // Position of the mob in the world
+	lastWanderTick   int         // Last tick we wandered, used to prevent immediate re-wandering
 	TargetX, TargetY float64     // Target position to move to
 	TargetID         ID
 	Stats            *Stats // Stats of the mob
@@ -75,6 +76,40 @@ type Mob struct {
 // Update does Mob logic, woo
 func (m *Mob) Update(state *State) {
 	speed := 0.7 * float64(state.Tickrate)
+
+	// If we're a "barbarian" mob (OwnerID == 0), we don't have a target.
+	if m.OwnerID == 0 {
+		if m.TargetID == 0 {
+			fief := state.Continent.GetContainingFief(m.X, m.Y)
+			if fief != nil {
+				visibleMobs := fief.Mobs.FindVisible(m.ID)
+				if len(visibleMobs) > 0 {
+					// Pick a random visible mob as the target.
+					targetMob := visibleMobs[state.Continent.Fate.NumGen.Intn(len(visibleMobs))]
+					// If they have fewer schlubs than us, we target them.
+					if len(targetMob.Schlubs) < len(m.Schlubs) {
+						m.TargetID = targetMob.ID
+					} else {
+						m.TargetID = 0
+					}
+				} else {
+					// No visible mobs, reset target.
+					m.TargetID = 0
+				}
+			} else {
+				m.TargetID = 0 // Reset if no fief found
+			}
+		}
+		// Eh, let's wander randomly if we don't have a target.
+		if m.TargetID == 0 {
+			m.lastWanderTick++
+			if m.lastWanderTick > 60 {
+				m.lastWanderTick = 0
+				m.TargetX = m.X + (state.Continent.Fate.NumGen.Float64()*2-1)*speed
+				m.TargetY = m.Y + (state.Continent.Fate.NumGen.Float64()*2-1)*speed
+			}
+		}
+	}
 
 	// Acquire our target mob if we have one set.
 	if m.TargetID != 0 {
