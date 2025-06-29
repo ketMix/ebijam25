@@ -88,8 +88,8 @@ func (t *Table) Loop() {
 			mob.AddSchlub(fam)
 
 			// Perhaps a little unfair (due to some people getting' ROBBED), but let's give a few random schlubs to the player.
-			for range 4 {
-				if t.Continent.Fate.NumGen.Intn(100) < 50 { // 50% chance to add a random schlub
+			for range 8 {
+				if t.Continent.Fate.NumGen.Intn(100) < 75 { // 75% chance to add a random schlub
 					if t.Continent.Fate.NumGen.Intn(100) < 50 { // 50% chance for it to be from a diff. fam.
 						fam = fam.NextFamily()
 					} else {
@@ -132,9 +132,9 @@ func (t *Table) Loop() {
 				}
 			}
 			// Mark the table as closed in there are 15+ players.
-			if len(t.players) >= 15 {
+			/*if len(t.players) >= 15 {
 				t.open = false // Close the table for new players
-			}
+			}*/
 		case player := <-t.playerLeave:
 			// Handle player leaving the table
 			for i, p := range t.players {

@@ -9,7 +9,7 @@ import (
 // New creates a new slog.Logger with a pretty log handler.
 func New(key, value string) *slog.Logger {
 	ph := prettylog.NewHandler(&slog.HandlerOptions{
-		Level: slog.LevelDebug,
+		Level: slog.LevelInfo,
 	})
 	return slog.New(ph).With(key, value)
 }

@@ -27,7 +27,7 @@ func (t *Table) Setup() {
 					var baseDamage int
 					switch mob.OuterKind {
 					case world.SchlubKindPlayer:
-						baseDamage = -5
+						baseDamage = -10
 					case world.SchlubKindMonk:
 						baseDamage = -1 // Just overload -1 to mean conversion.
 					case world.SchlubKindWarrior:
@@ -35,21 +35,18 @@ func (t *Table) Setup() {
 					case world.SchlubKindVagrant:
 						baseDamage = 1
 					}
-					fmt.Println("Mob collision detected:", mob.ID, "with", other.ID, "base damage:", baseDamage)
-					/*if baseDamage < 0 {
+					if baseDamage < 0 {
 						// Convert schlubs from the other mob to this one.
-						count := -baseDamage
-						if count >= len(other.Schlubs) {
-							count = len(other.Schlubs) - 1
-						}
+						count := min(-baseDamage, len(other.Schlubs))
 						if count > 0 {
 							// Convert schlubs from the other mob to this one.
 							var schlubIDs []int
+							fmt.Println("count is", count, "other schlubs length is", len(other.Schlubs))
 							for i := 0; i < count; i++ {
 								schlubIDs = append(schlubIDs, int(other.Schlubs[i]))
 							}
+							mob.Schlubs = append(mob.Schlubs, other.Schlubs[:count]...)
 							other.Schlubs = other.Schlubs[count:]
-							mob.Schlubs = append(mob.Schlubs, other.Schlubs[:count-1]...)
 							t.State.EventBus.Publish(&event.MobConvert{
 								From: other.ID,
 								To:   mob.ID,
@@ -57,11 +54,10 @@ func (t *Table) Setup() {
 							})
 						}
 					} else if baseDamage > 0 {
-						if len(other.Schlubs) < baseDamage {
-							baseDamage = len(other.Schlubs)
-						}
+						baseDamage = min(baseDamage, len(other.Schlubs))
 						var schlubIDs []int
-						for i := 0; i < baseDamage; i++ {
+						// Take schlubs from the _end_ of the other mob's schlubs.
+						for i := 0; i < baseDamage && i < len(other.Schlubs); i++ {
 							schlubIDs = append(schlubIDs, int(other.Schlubs[i]))
 						}
 
@@ -71,8 +67,8 @@ func (t *Table) Setup() {
 							AttackerID: mob.ID,
 							IDs:        schlubIDs,
 						})
-						// Remove the schlubs from the other mob.
-						other.Schlubs = other.Schlubs[baseDamage:]
+						// Remove the schlubs from the other mob from the end.
+						other.Schlubs = other.Schlubs[len(other.Schlubs)-baseDamage:]
 					}
 					// Destroy the other mob if it has no schlubs left.
 					if len(other.Schlubs) == 0 {
@@ -80,7 +76,7 @@ func (t *Table) Setup() {
 							ID: other.ID,
 						})
 						// TODO: Maybe we should also check if the player has any mobs left.
-					}*/
+					}
 				}
 			}
 		}
@@ -185,6 +181,26 @@ func (t *Table) Setup() {
 		case *request.Construct:
 			if evt.Caravan >= int(world.SchlubKindCaravanVagrant) && evt.Caravan <= int(world.SchlubKindCaravanWarrior) {
 				if mob := t.Continent.Mobs.FindByID(msg.player.MobID); mob != nil {
+					if len(mob.Schlubs) < 3 {
+						// Not enough schlubs to construct a caravan.
+						return
+					}
+
+					// Let's remove the last 3 schlubs from the mob.
+					count := 3
+					var schlubIDs []int
+					for i := 0; i < count && i < len(mob.Schlubs); i++ {
+						schlubIDs = append(schlubIDs, int(mob.Schlubs[i]))
+					}
+
+					// Deal damage to the mob.
+					t.SendVisibleMobEvent(mob, &event.MobDamage{
+						ID:         mob.ID,
+						AttackerID: mob.ID,
+						IDs:        schlubIDs,
+					})
+					// Remove schlubs from the mob.
+					mob.Schlubs = mob.Schlubs[:len(mob.Schlubs)-count]
 
 					// Add a some schlubs.
 					fam := t.FamilyID.NextSchlub()

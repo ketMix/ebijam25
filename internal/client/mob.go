@@ -34,6 +34,18 @@ func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob, simple bool) {
 	if mob.ID == g.MobID {
 		vision := mob.Vision()
 		vector.StrokeCircle(screen, float32(mob.X), float32(mob.Y), float32(vision), 4, color.NRGBA{0, 0, 255, 64}, false)
+		// Also draw the combat style.
+		var name string
+		if exists {
+			if ps.outerSchlubKind == world.SchlubKindVagrant {
+				name = "vagrant style"
+			} else if ps.outerSchlubKind == world.SchlubKindMonk {
+				name = "monk style"
+			} else if ps.outerSchlubKind == world.SchlubKindWarrior {
+				name = "warrior style"
+			}
+		}
+		ebitenutil.DebugPrintAt(screen, name, int(mob.X)-10, int(mob.Y)-20)
 	}
 
 	// Also draw a "combat" circle for any mob.
