@@ -40,7 +40,6 @@ func (g *Game) Setup() {
 	g.cammie.Setup()
 	g.EventBus = *event.NewBus("client")
 	g.continentImage = ebiten.NewImage(world.ContinentPixelSpan, world.ContinentPixelSpan)
-	PlayAudio("music")
 
 	// **** Event -> local state change hooks.
 	g.EventBus.Subscribe((event.MetaJoin{}).Type(), func(e event.Event) {
@@ -96,6 +95,7 @@ func (g *Game) Setup() {
 			g.Dialoggies.Next()
 		})
 		g.Dialoggies.SetTitleColor(evt.Color) // Just for fanciness.
+		PlayAudio("music")
 	})
 	g.EventBus.Subscribe((event.MetaRefresh{}).Type(), func(e event.Event) {
 		evt := e.(*event.MetaRefresh)
