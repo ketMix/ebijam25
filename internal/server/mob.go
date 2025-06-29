@@ -65,8 +65,8 @@ func (t *Table) SendMobTo(mob *world.Mob, player *Player) {
 	evt := &event.MobSpawn{
 		ID:        mob.ID,
 		Owner:     mob.OwnerID,
-		X:         int(mob.X),
-		Y:         int(mob.Y),
+		X:         mob.X,
+		Y:         mob.Y,
 		Schlubs:   schlubs,
 		OuterKind: int(mob.OuterKind),
 	}

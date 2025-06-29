@@ -53,6 +53,17 @@ func (d *Director) AddMobs() {
 	fam := t.FamilyID.NextFamily()
 	fam.SetKindID(int(world.SchlubKindVagrant)) // Set the kind to Vagrant for all random spawns.
 	schlubs := fam.NextSchlubs(mobSchlubCount)
+	// Actually randomize some of the schlubs to be monks or warriors.
+	for i := range mobSchlubCount {
+		if t.Continent.Fate.NumGen.Intn(100) < 20 {
+			// 20% chance to make a schlub a monk or warrior
+			if t.Continent.Fate.NumGen.Intn(100) < 50 {
+				schlubs[i].SetKindID(int(world.SchlubKindMonk))
+			} else {
+				schlubs[i].SetKindID(int(world.SchlubKindWarrior))
+			}
+		}
+	}
 	t.FamilyID = schlubs[len(schlubs)-1]
 
 	mob := t.Continent.NewMob(0, t.mobID.Next(), posX, posY)

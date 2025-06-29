@@ -15,8 +15,8 @@ func (s Split) Type() string {
 
 // Move represents a request to move a mob towards a new position.
 type Move struct {
-	X int `json:"x"` // X coordinate to move to
-	Y int `json:"y"` // Y coordinate to move to
+	X float64 `json:"x"` // X coordinate to move to
+	Y float64 `json:"y"` // Y coordinate to move to
 }
 
 // Type returns the type of the Move request.

@@ -172,19 +172,15 @@ func (g *Game) Setup() {
 	g.EventBus.Subscribe((event.MobPosition{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobPosition)
 		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
-			floatX := float64(evt.X) / world.FloatScale
-			floatY := float64(evt.Y) / world.FloatScale
-			g.Continent.MoveMob(mob, floatX, floatY)
-			g.log.Debug("mob position updated", "id", evt.ID, "x", floatX, "y", floatY)
+			g.Continent.MoveMob(mob, evt.X, evt.Y)
+			g.log.Debug("mob position updated", "id", evt.ID, "x", evt.X, "y", evt.Y)
 		}
 	})
 	g.EventBus.Subscribe((event.MobMove{}).Type(), func(e event.Event) {
 		evt := e.(*event.MobMove)
 		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
-			floatX := float64(evt.X) / world.FloatScale
-			floatY := float64(evt.Y) / world.FloatScale
-			mob.TargetX = floatX
-			mob.TargetY = floatY
+			mob.TargetX = evt.X
+			mob.TargetY = evt.Y
 			mob.TargetID = evt.TargetID
 			g.log.Info("mob move requested", "id", evt.ID, "targetX", evt.X, "targetY", evt.Y, "targetID", evt.TargetID)
 		}
@@ -283,8 +279,8 @@ func (g *Game) Update() error {
 			// Convert screen coordinates to world coordinates.
 			x, y := g.cammie.ScreenToWorld(ebiten.CursorPosition())
 			g.EventBus.Publish(&request.Move{
-				X: int(x * world.FloatScale),
-				Y: int(y * world.FloatScale),
+				X: x,
+				Y: y,
 			})
 			g.log.Debug("move request sent", "x", x, "y", y)
 		}
