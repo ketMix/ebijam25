@@ -104,67 +104,6 @@ func (m *Mob) Update(state *State) {
 		intX := int(x * FloatScale)
 		intY := int(y * FloatScale)
 		state.EventBus.Publish(&event.MobPosition{ID: m.ID, X: intX, Y: intY})
-		// Check if we're intersecting with any other mobs.
-		for _, other := range state.Continent.Mobs {
-			if other.ID != m.ID && m.Intersects(other) {
-				var baseDamage int
-				switch m.OuterKind {
-				case SchlubKindPlayer:
-					baseDamage = -5
-				case SchlubKindMonk:
-					baseDamage = -1 // Just overload -1 to mean conversion.
-				case SchlubKindWarrior:
-					baseDamage = 2
-				case SchlubKindVagrant:
-					baseDamage = 1
-				}
-				if baseDamage < 0 {
-					// Convert schlubs from the other mob to this one.
-					count := -baseDamage
-					if len(other.Schlubs) < count {
-						count = len(other.Schlubs)
-					}
-					if count > 0 {
-						// Convert schlubs from the other mob to this one.
-						var schlubIDs []int
-						for i := 0; i < count; i++ {
-							schlubIDs = append(schlubIDs, int(other.Schlubs[i]))
-						}
-						other.Schlubs = other.Schlubs[count:]
-						m.Schlubs = append(m.Schlubs, other.Schlubs[:count]...)
-						state.EventBus.Publish(&event.MobConvert{
-							From: m.ID,
-							To:   other.ID,
-							IDs:  schlubIDs,
-						})
-					}
-				} else if baseDamage > 0 {
-					if len(other.Schlubs) < baseDamage {
-						baseDamage = len(other.Schlubs)
-					}
-					var schlubIDs []int
-					for i := 0; i < baseDamage; i++ {
-						schlubIDs = append(schlubIDs, int(other.Schlubs[i]))
-					}
-
-					// Deal damage to the other mob.
-					state.EventBus.Publish(&event.MobDamage{
-						ID:         other.ID,
-						AttackerID: m.ID,
-						IDs:        schlubIDs,
-					})
-					// Remove the schlubs from the other mob.
-					other.Schlubs = other.Schlubs[baseDamage:]
-				}
-				// Destroy the other mob if it has no schlubs left.
-				if len(other.Schlubs) == 0 {
-					state.EventBus.Publish(&event.MobDespawn{
-						ID: other.ID,
-					})
-					// TODO: Maybe we should also check if the player has any mobs left.
-				}
-			}
-		}
 	}
 }
 
