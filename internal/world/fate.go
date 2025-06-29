@@ -2,12 +2,14 @@ package world
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/KEINOS/go-noise"
 )
 
 type Fate struct {
 	noise.Generator
+	NumGen    *rand.Rand
 	certainty float64
 }
 
@@ -19,6 +21,7 @@ func NewFate(sneed uint) Fate {
 
 	return Fate{
 		Generator: generator,
+		NumGen:    rand.New(rand.NewSource(int64(sneed))),
 		certainty: 200,
 	}
 }
