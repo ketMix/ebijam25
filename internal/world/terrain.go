@@ -10,9 +10,13 @@ const (
 	TerrainNone Terrain = iota
 	TerrainDirt
 	TerrainGrass
-	TerrainRockyGrass
+	TerrainGrassyDirt
+	TerrainGrassySand
+	TerrainGrassyRocks
 	TerrainRockyDirt
+	TerrainRockySand
 	TerrainSand
+	TerrainRocks
 	TerrainWater
 	TerrainPines
 	TerrainCount // Total number of terrain types
@@ -33,12 +37,20 @@ func (t Terrain) ImageName() string {
 		return "dirt"
 	case TerrainGrass:
 		return "grass"
-	case TerrainRockyGrass:
+	case TerrainGrassyDirt:
+		return "grassy-dirt"
+	case TerrainGrassyRocks:
 		return "grassy-rocks"
+	case TerrainGrassySand:
+		return "grassy-sand"
 	case TerrainRockyDirt:
 		return "rocky-dirt"
+	case TerrainRockySand:
+		return "rocky-sand"
 	case TerrainSand:
 		return "sand"
+	case TerrainRocks:
+		return "rocks"
 	case TerrainWater:
 		return "water"
 	default:
@@ -54,10 +66,18 @@ func (t Terrain) String() string {
 		return "Dirt"
 	case TerrainGrass:
 		return "Grass"
-	case TerrainRockyGrass:
-		return "Rocky Grass"
+	case TerrainGrassyRocks:
+		return "Grassy Rocks"
+	case TerrainGrassySand:
+		return "Grassy Sand"
+	case TerrainGrassyDirt:
+		return "Grassy Dirt"
 	case TerrainRockyDirt:
 		return "Rocky Dirt"
+	case TerrainRockySand:
+		return "Rocky Sand"
+	case TerrainRocks:
+		return "Rocks"
 	case TerrainSand:
 		return "Sand"
 	case TerrainWater:
@@ -107,32 +127,36 @@ func getMoisture(fate *Fate, x, y float64) float64 {
 }
 
 func getTerrain(elevation, temperature, moisture float64) Terrain {
-	if elevation < 0.05 {
-		return TerrainWater
-	}
-	if elevation < 0.10 {
-		return TerrainSand
-	}
-
-	if elevation > 0.9 {
-		return TerrainRockyDirt
-	}
-
-	if temperature > 0.8 {
-		if moisture < 0.3 {
+	if elevation < 0.3 {
+		if moisture < 0.2 {
 			return TerrainSand
+		} else if moisture < 0.6 {
+			return TerrainGrassySand
+		} else if moisture <= 1.0 {
+			return TerrainWater
 		}
-		if moisture < 0.5 {
+	} else if elevation < 0.6 {
+		if moisture < 0.2 {
+			return TerrainRocks
+		} else if moisture < 0.3 {
 			return TerrainRockyDirt
+		} else if moisture < 0.4 {
+			return TerrainDirt
+		} else if moisture < 0.6 {
+			return TerrainGrass
+		} else if moisture <= 1.0 {
+			return TerrainGrassyDirt
 		}
-		return TerrainDirt
-	}
-
-	if moisture > 0.4 {
-		if elevation > 0.7 {
-			return TerrainRockyGrass
+	} else if elevation < 1.0 {
+		if moisture < 0.2 {
+			return TerrainGrass
+		} else if moisture < 0.6 {
+			return TerrainGrassyRocks
+		} else if moisture < 0.8 {
+			return TerrainRockyDirt
+		} else if moisture <= 1.0 {
+			return TerrainRocks
 		}
-		return TerrainGrass
 	}
-	return TerrainDirt
+	return TerrainGrass
 }
