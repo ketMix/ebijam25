@@ -70,6 +70,8 @@ type Mob struct {
 	Stats            *Stats // Stats of the mob
 	Schlubs          []SchlubID
 	OuterKind        SchlubID // Outer kind of the mob, used for formation
+	SpawnCheckTick   int      // Tick to iterate our schlubs and spawn check
+	SpawnCheckChunk  int      // Iterate using the above tick to check and spawn schlubs from caravans.
 }
 
 // Update does Mob logic, woo
@@ -137,6 +139,44 @@ func (m *Mob) Update(state *State) {
 
 		state.EventBus.Publish(&event.MobPosition{ID: m.ID, X: x, Y: y})
 	}
+
+	// Might as well check for spawning the ol' schlubbers.
+	m.SpawnCheckTick++
+	if m.SpawnCheckTick > 40 {
+		m.SpawnCheckTick = 0
+		min := m.SpawnCheckChunk
+		max := min + 10
+		if max >= len(m.Schlubs) {
+			max = len(m.Schlubs) // Ensure we don't exceed the slice length
+		}
+		m.SpawnCheckChunk = max
+		if m.SpawnCheckChunk >= max {
+			m.SpawnCheckChunk = 0 // Reset chunk if we exceed max
+		}
+		var schlubIDs []int
+		for i := min; i < max; i++ {
+			if m.Schlubs[i].KindID() == int(SchlubKindCaravanMonk) {
+				id := m.Schlubs[i].NextSchlub()
+				id.SetKindID(int(SchlubKindMonk))
+				schlubIDs = append(schlubIDs, int(id))
+			} else if m.Schlubs[i].KindID() == int(SchlubKindCaravanVagrant) {
+				id := m.Schlubs[i].NextSchlub()
+				id.SetKindID(int(SchlubKindVagrant))
+				schlubIDs = append(schlubIDs, int(id))
+			} else if m.Schlubs[i].KindID() == int(SchlubKindCaravanWarrior) {
+				id := m.Schlubs[i].NextSchlub()
+				id.SetKindID(int(SchlubKindWarrior))
+				schlubIDs = append(schlubIDs, int(id))
+			}
+		}
+		if len(schlubIDs) > 0 {
+			state.EventBus.Publish(&event.MobCreate{
+				ID:  m.ID,
+				IDs: schlubIDs,
+			})
+		}
+	}
+
 }
 
 func (m *Mob) AddSchlub(schlub ...SchlubID) {
