@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/ketMix/ebijam25/internal/world"
 	"github.com/ketMix/ebijam25/stuff"
 )
@@ -30,6 +31,14 @@ type Schlub struct {
 	VDistance    float64 // Radial velocity (toward/away from center)
 	VAngle       float64 // Angular velocity (orbital motion)
 	GridX, GridY int
+}
+
+func (s *Schlub) FamilyName() string {
+	return stuff.GetName(s.ID.FamilyID())
+}
+
+func (s *Schlub) GetName() string {
+	return stuff.GetName(s.ID.SchlubID())
 }
 
 type polarGrid struct {
@@ -426,7 +435,7 @@ func (s *Schlubs) Update(serverRate float64) {
 	s.integrateAndConstrain()
 }
 
-func (s *Schlubs) Draw(screen *ebiten.Image) {
+func (s *Schlubs) Draw(screen *ebiten.Image, showNames bool) {
 	for _, p := range s.schlubs {
 		op := &ebiten.DrawImageOptions{}
 		x, y := s.getCartesian(p)
@@ -442,6 +451,11 @@ func (s *Schlubs) Draw(screen *ebiten.Image) {
 			screen.DrawImage(s.playerImage, op)
 		} else {
 			screen.DrawImage(s.vagrantImage, op)
+		}
+		// For now... we really need to use fate or something to get an offset start.
+		if showNames {
+			name := p.GetName() + " " + p.FamilyName()
+			ebitenutil.DebugPrintAt(screen, name, int(x), int(y))
 		}
 	}
 }

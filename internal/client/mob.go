@@ -20,7 +20,7 @@ func (g *Game) DrawMob(screen *ebiten.Image, mob *world.Mob, simple bool) {
 	ps, exists := g.schlubSystem[mob.ID]
 	if !simple && exists && ps != nil {
 		// Draw particles with fluid effect
-		ps.Draw(screen)
+		ps.Draw(screen, !simple) // just for now
 	} else {
 		// Fallback to simple circle if no particle system
 		radius := mob.Radius()

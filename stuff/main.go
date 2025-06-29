@@ -49,3 +49,29 @@ func GetImage(name string) *ebiten.Image {
 	}
 	return nil
 }
+
+var names []string
+
+//go:embed names-moby-word-lists-grady-ward.txt
+var namesFile embed.FS
+
+// LoadNames gets our names.
+func LoadNames() error {
+	data, err := namesFile.ReadFile("names-moby-word-lists-grady-ward.txt")
+	if err != nil {
+		return err
+	}
+	// Split strings by CRLF.
+	for _, line := range bytes.Split(data, []byte{'\r', '\n'}) {
+		if len(line) > 0 {
+			names = append(names, string(line))
+		}
+	}
+
+	return nil
+}
+
+// GetName do be getting a name by number, tho. It modulo wraps.
+func GetName(num int) string {
+	return names[num%len(names)]
+}

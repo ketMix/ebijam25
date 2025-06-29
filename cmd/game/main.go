@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// It's a great game we've developed here...!!!
-	g := game.NewGame(false)
+	g := game.NewGame(true)
 
 	tm := &transitions.Manager{}
 	g.Managers.Add(tm)
@@ -17,6 +17,10 @@ func main() {
 	tm.Add(transitions.NewFade(60*4, false))
 
 	if err := stuff.LoadImages(); err != nil {
+		panic(err)
+	}
+
+	if err := stuff.LoadNames(); err != nil {
 		panic(err)
 	}
 
