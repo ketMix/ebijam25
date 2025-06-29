@@ -191,6 +191,53 @@ func (g *Game) Setup() {
 			}
 		}
 	})
+	g.EventBus.Subscribe((event.MobDamage{}).Type(), func(e event.Event) {
+		evt := e.(*event.MobDamage)
+		if mob := g.Continent.Mobs.FindByID(evt.ID); mob != nil {
+			if len(evt.IDs) > 0 {
+				var schlubs []world.SchlubID
+				for _, id := range evt.IDs {
+					schlubs = append(schlubs, world.SchlubID(id))
+				}
+				mob.RemoveSchlub(schlubs...)
+				// Also remove from schlub system wart.
+				if g.schlubSystem[mob.ID] != nil {
+					g.schlubSystem[mob.ID].RemoveSchlubs(schlubs...)
+				} else {
+					g.log.Warn("mob damage event received but schlub system not found for mob", "id", evt.ID)
+				}
+				g.log.Info("mob damaged", "id", evt.ID, "schlubs removed", len(evt.IDs))
+			} else {
+				g.log.Warn("mob damage event received with no schlubs to remove", "id", evt.ID)
+			}
+		} else {
+			g.log.Warn("mob damage event received but mob not found", "id", evt.ID)
+		}
+	})
+	g.EventBus.Subscribe((event.MobConvert{}).Type(), func(e event.Event) {
+		evt := e.(*event.MobConvert)
+		var schlubs []world.SchlubID
+		for _, id := range evt.IDs {
+			schlubs = append(schlubs, world.SchlubID(id))
+		}
+		if fromMob := g.Continent.Mobs.FindByID(evt.From); fromMob != nil {
+			if toMob := g.Continent.Mobs.FindByID(evt.To); toMob != nil {
+				// Convert schlubs from one mob to another.
+				if g.schlubSystem[fromMob.ID] != nil && g.schlubSystem[toMob.ID] != nil {
+					collected := g.schlubSystem[fromMob.ID].CollectSchlubsByID(schlubs...)
+					g.schlubSystem[toMob.ID].PersuadeSchlubs(collected)
+					g.schlubSystem[fromMob.ID].RemoveSchlubs(schlubs...)
+					g.log.Info("mob converted", "from", evt.From, "to", evt.To, "schlubs", len(evt.IDs))
+				} else {
+					g.log.Warn("mob convert event received but schlub system not found for one or both mobs", "from", evt.From, "to", evt.To)
+				}
+			} else {
+				g.log.Warn("mob convert event received but to mob not found", "to", evt.To)
+			}
+		} else {
+			g.log.Warn("mob convert event received but from mob not found", "from", evt.From)
+		}
+	})
 
 	// **** Request -> network send hooks.
 	g.EventBus.Subscribe((request.Move{}).Type(), func(e event.Event) {
