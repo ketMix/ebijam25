@@ -12,7 +12,7 @@ func main() {
 		panic(err)
 	}
 	// It's a great game we've developed here...!!!
-	g := game.NewGame(false) // Oops, didn't mean to commit being local-only
+	g := game.NewGame(true) // Set to true for entirely local play, otherwise it goes to gamu
 
 	tm := &transitions.Manager{}
 	g.Managers.Add(tm)
